@@ -309,8 +309,8 @@ export default function HomePage() {
                                 className="text-[#3B7DD8]"
                               />
                               <span className="font-semibold">
-                                {count} / {evt.max_participants} seats
-                                booked
+                                {count} of {evt.max_participants} seats have
+                                been booked
                               </span>
                             </div>
                             <span
@@ -343,11 +343,12 @@ export default function HomePage() {
                         </div>
 
                         {/* Going pill — who's confirmed, links to full list */}
-                        {(attendeesMap[evt.id]?.length || 0) > 0 && (
+                        {(bookingCounts[evt.id] || 0) > 0 && (
                           <div className="mb-4 flex justify-start">
                             <GoingPill
                               attendees={attendeesMap[evt.id] || []}
                               eventId={evt.id}
+                              totalCount={count}
                             />
                           </div>
                         )}

@@ -913,7 +913,11 @@ export default function BookPage() {
 
             {attendees.length > 0 && event && (
               <div className="mt-6 flex justify-center">
-                <GoingPill attendees={attendees} eventId={event.id} />
+                <GoingPill
+                  attendees={attendees}
+                  eventId={event.id}
+                  totalCount={bookingCount}
+                />
               </div>
             )}
           </div>

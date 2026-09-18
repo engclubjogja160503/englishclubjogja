@@ -41,16 +41,20 @@ export function attendeeName(a: GoingAttendee, index: number) {
 export default function GoingPill({
   attendees,
   eventId,
+  totalCount,
   dark = false,
 }: {
   attendees: GoingAttendee[];
   eventId: string;
+  /** Full confirmed total (attendees may be just a preview sample). */
+  totalCount?: number;
   dark?: boolean;
 }) {
-  if (attendees.length === 0) return null;
+  const total = totalCount ?? attendees.length;
+  if (total === 0) return null;
 
   const shown = attendees.slice(0, 5);
-  const extra = attendees.length - shown.length;
+  const extra = Math.max(total - shown.length, 0);
 
   return (
     <Link
@@ -107,7 +111,7 @@ export default function GoingPill({
           dark ? "text-[#A3A3A3]" : "text-[#F47B20]"
         }`}
       >
-        {attendees.length} confirmed &rarr;
+        {total} confirmed &rarr;
       </span>
     </Link>
   );
