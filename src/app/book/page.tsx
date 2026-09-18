@@ -6,13 +6,18 @@ import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { CheckCircle, Loader2, User, ArrowRight } from "lucide-react";
+import GoingPill from "@/components/GoingPill";
+import { CheckCircle, Loader2, User, ArrowRight, LogIn } from "lucide-react";
 import {
   OCCUPATION_OPTIONS,
   DOMICILE_OPTIONS,
   INTEREST_OPTIONS,
   EXPECTATION_OPTIONS,
+  AGE_RANGES,
+  MBTI_OPTIONS,
 } from "@/lib/constants";
+
+const GOOGLE_SHEETS_WEBHOOK_URL = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_WEBHOOK_URL;
 
 interface EventData {
   id: string;
@@ -21,13 +26,27 @@ interface EventData {
   max_participants: number;
 }
 
+interface AttendeeData {
+  id: string;
+  guest_name: string | null;
+  profiles: { full_name: string; username: string; avatar_url?: string | null } | null;
+}
+
 export default function BookPage() {
-  const [step, setStep] = useState<"choose" | "form" | "success">("choose");
+  const [step, setStep] = useState<"choose" | "confirm" | "declined" | "form" | "success">("choose");
   const [isMember, setIsMember] = useState(false);
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState("");
+  const [showMemberLogin, setShowMemberLogin] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [attendees, setAttendees] = useState<AttendeeData[]>([]);
+  const [bookingError, setBookingError] = useState("");
+  const [bookingCount, setBookingCount] = useState(0);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -40,6 +59,8 @@ export default function BookPage() {
     interests: [] as string[],
     expectations: [] as string[],
     expectation_other: "",
+    age_range: "",
+    mbti: "",
   });
 
   // Logged in user
@@ -75,20 +96,36 @@ export default function BookPage() {
             interests: profile.interests || [],
             expectations: profile.expectations || [],
             expectation_other: profile.expectation_other || "",
+            age_range: profile.age_range || "",
+            mbti: profile.mbti || "",
           });
         }
       }
 
-      // Fetch active event
+      // Fetch active event (skip archived ones)
       const { data: events } = await supabase
         .from("events")
         .select("*")
         .eq("is_active", true)
         .order("event_date", { ascending: true })
-        .limit(1);
+        .limit(5);
 
-      if (events && events.length > 0) {
-        setEvent(events[0]);
+      const visible = (events || []).filter((e) => !e.is_archived);
+      if (visible.length > 0) {
+        const activeEvent = visible[0];
+        setEvent(activeEvent);
+
+        const { data: confirmedBookings } = await supabase
+          .from("bookings")
+          .select("id, guest_name, profiles(full_name, username, avatar_url)")
+          .eq("event_id", activeEvent.id)
+          .eq("status", "confirmed")
+          .order("created_at", { ascending: true });
+
+        if (confirmedBookings) {
+          setAttendees(confirmedBookings as unknown as AttendeeData[]);
+          setBookingCount(confirmedBookings.length);
+        }
       }
       setLoading(false);
     }
@@ -97,8 +134,182 @@ export default function BookPage() {
   }, []);
 
   const handleChoice = (member: boolean) => {
+    if (member && !user) {
+      setShowMemberLogin(true);
+      return;
+    }
+
     setIsMember(member);
-    setStep("form");
+  setStep(member ? "confirm" : "form");
+  };
+
+  const handleMemberLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoggingIn(true);
+    setLoginError("");
+
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword,
+    });
+
+    if (error || !data.user) {
+      setLoginError(error?.message || "Unable to log in. Please try again.");
+      setLoggingIn(false);
+      return;
+    }
+
+    setUser({ id: data.user.id, email: data.user.email || loginEmail });
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || "",
+        email: profile.email || data.user.email || loginEmail,
+        phone: profile.phone || "",
+        occupation: profile.occupation || "Student",
+        domicile: profile.domicile || "Kota Yogyakarta",
+        instagram: profile.instagram || "",
+        interests: profile.interests || [],
+        expectations: profile.expectations || [],
+        expectation_other: profile.expectation_other || "",
+        age_range: profile.age_range || "",
+        mbti: profile.mbti || "",
+      });
+    }
+
+    setIsMember(true);
+    setStep("confirm");
+    setLoggingIn(false);
+  };
+
+  const confirmMemberBooking = async () => {
+    if (!event) return;
+    setSubmitting(true);
+    setBookingError("");
+
+    const supabase = createClient();
+
+    // Re-check capacity before booking
+    const { count: currentCount } = await supabase
+      .from("bookings")
+      .select("*", { count: "exact", head: true })
+      .eq("event_id", event.id)
+      .eq("status", "confirmed");
+
+    if ((currentCount || 0) >= event.max_participants) {
+      setBookingError("Sorry, this event is now fully booked.");
+      setSubmitting(false);
+      return;
+    }
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+    const member = currentUser || user;
+
+    if (!member) {
+      setBookingError("Your login session has expired. Please log in again.");
+      setSubmitting(false);
+      return;
+    }
+
+    const memberEmail = member.email || loginEmail;
+    const memberUsername =
+      currentUser?.user_metadata?.username ||
+      `${memberEmail.split("@")[0]}-${member.id.slice(0, 6)}`;
+
+    const { error: profileError } = await supabase.from("profiles").upsert({
+      id: member.id,
+      email: memberEmail,
+      username: memberUsername,
+      full_name: formData.full_name || memberEmail.split("@")[0],
+      phone: formData.phone || "Not provided",
+      occupation: formData.occupation || "General",
+      domicile: formData.domicile || "Other",
+      instagram: formData.instagram,
+      interests: formData.interests,
+      expectations: formData.expectations,
+      expectation_other: formData.expectation_other,
+      age_range: formData.age_range,
+      mbti: formData.mbti,
+      is_member: true,
+    });
+
+    if (profileError) {
+      console.error("Profile recovery error:", profileError);
+      setBookingError(profileError.message);
+      setSubmitting(false);
+      return;
+    }
+
+    const { data: cancelledBooking } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("event_id", event.id)
+      .eq("user_id", member.id)
+      .eq("status", "cancelled")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const bookingQuery = cancelledBooking
+      ? supabase
+          .from("bookings")
+          .update({ status: "confirmed", cancellation_reason: null })
+          .eq("id", cancelledBooking.id)
+      : supabase.from("bookings").insert({
+          event_id: event.id,
+          user_id: member.id,
+          status: "confirmed",
+          is_member: true,
+        });
+
+    const { data: booking, error: bookingError } = await bookingQuery
+      .select("id")
+      .single();
+
+    if (bookingError) {
+      console.error("Booking error:", bookingError);
+      setBookingError(bookingError.message);
+      setSubmitting(false);
+      return;
+    }
+
+    if (booking?.id && GOOGLE_SHEETS_WEBHOOK_URL) {
+      try {
+        await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            eventDate: event.event_date,
+            name: formData.full_name,
+            email: formData.email,
+            phone: formData.phone,
+            username: "",
+            occupation: formData.occupation,
+            domicile: formData.domicile,
+            instagram: formData.instagram,
+            isMember: true,
+            status: "confirmed",
+            bookingDate: new Date().toISOString(),
+            age: formData.age_range,
+            mbti: formData.mbti,
+          }),
+        });
+      } catch (sheetsError) {
+        console.error("Google Sheets sync error:", sheetsError);
+      }
+    }
+
+    setBookingId(booking?.id || "");
+    setStep("success");
+    setSubmitting(false);
   };
 
   const toggleInterest = (interest: string) => {
@@ -108,6 +319,27 @@ export default function BookPage() {
         ? prev.interests.filter((i) => i !== interest)
         : [...prev.interests, interest],
     }));
+  };
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUser(null);
+    setIsMember(false);
+    setFormData({
+      full_name: "",
+      email: "",
+      phone: "",
+      occupation: "Student",
+      domicile: "Kota Yogyakarta",
+      instagram: "",
+      interests: [],
+      expectations: [],
+      expectation_other: "",
+      age_range: "",
+      mbti: "",
+    });
+    setStep("choose");
   };
 
   const toggleExpectation = (exp: string) => {
@@ -122,9 +354,35 @@ export default function BookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!event) return;
+
+    setBookingError("");
+    if (!isMember || !user) {
+      if (!formData.age_range) {
+        setBookingError("Please select your age range.");
+        return;
+      }
+      if (!formData.mbti) {
+        setBookingError("Please select your MBTI type.");
+        return;
+      }
+    }
+
     setSubmitting(true);
 
     const supabase = createClient();
+
+    // Re-check capacity before booking
+    const { count: currentCount } = await supabase
+      .from("bookings")
+      .select("*", { count: "exact", head: true })
+      .eq("event_id", event.id)
+      .eq("status", "confirmed");
+
+    if ((currentCount || 0) >= event.max_participants) {
+      setBookingError("Sorry, this event is now fully booked.");
+      setSubmitting(false);
+      return;
+    }
 
     // If member, update profile
     if (isMember && user) {
@@ -139,6 +397,8 @@ export default function BookPage() {
         interests: formData.interests,
         expectations: formData.expectations,
         expectation_other: formData.expectation_other,
+        age_range: formData.age_range,
+        mbti: formData.mbti,
         is_member: true,
       });
     }
@@ -156,18 +416,82 @@ export default function BookPage() {
       bookingData.guest_name = formData.full_name;
       bookingData.guest_phone = formData.phone;
       bookingData.guest_email = formData.email;
+      // Guest demographics — read by the admin panel (requires the
+      // add-guest-details migration; falls back gracefully if missing).
+      bookingData.guest_age_range = formData.age_range;
+      bookingData.guest_mbti = formData.mbti;
+      bookingData.guest_occupation = formData.occupation;
+      bookingData.guest_domicile = formData.domicile;
+      bookingData.guest_instagram = formData.instagram;
     }
 
-    const { data: booking, error: bookingError } = await supabase
-      .from("bookings")
-      .insert(bookingData)
-      .select("id")
-      .single();
+    let booking: { id: string } | null = null;
+    let bookingError: { message: string } | null = null;
+    {
+      const res = await supabase
+        .from("bookings")
+        .insert(bookingData)
+        .select("id")
+        .single();
+      booking = res.data;
+      bookingError = res.error;
+      // Fallback for databases where the guest_* columns don't exist yet:
+      // retry with only the original columns.
+      if (bookingError && /guest_/.test(bookingError.message)) {
+        const fallbackData: Record<string, unknown> = {
+          event_id: event.id,
+          status: "confirmed",
+          is_member: isMember,
+        };
+        if (isMember && user) {
+          fallbackData.user_id = user.id;
+        } else {
+          fallbackData.guest_name = formData.full_name;
+          fallbackData.guest_phone = formData.phone;
+          fallbackData.guest_email = formData.email;
+        }
+        const retry = await supabase
+          .from("bookings")
+          .insert(fallbackData)
+          .select("id")
+          .single();
+        booking = retry.data;
+        bookingError = retry.error;
+      }
+    }
 
     if (bookingError) {
       console.error("Booking error:", bookingError);
+      setBookingError(bookingError.message || "Failed to create booking. Please try again.");
       setSubmitting(false);
       return;
+    }
+
+    if (booking?.id && GOOGLE_SHEETS_WEBHOOK_URL) {
+      try {
+        await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            eventDate: event.event_date,
+            name: formData.full_name,
+            email: formData.email,
+            phone: formData.phone,
+            username: "",
+            occupation: formData.occupation,
+            domicile: formData.domicile,
+            instagram: formData.instagram,
+            isMember,
+            status: "confirmed",
+            bookingDate: new Date().toISOString(),
+            age: formData.age_range,
+            mbti: formData.mbti,
+          }),
+        });
+      } catch (sheetsError) {
+        console.error("Google Sheets sync error:", sheetsError);
+      }
     }
 
     setBookingId(booking?.id || "");
@@ -210,6 +534,51 @@ export default function BookPage() {
             </p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  const isFull = bookingCount >= event.max_participants;
+
+  if (isFull) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="max-w-md w-full text-center animate-slideUp">
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8]">
+              <div className="text-6xl mb-6">😅</div>
+              <h1 className="text-2xl font-bold text-[#1A1A1A] mb-3">
+                Fully Booked!
+              </h1>
+              <p className="text-[#6B7280] mb-2">
+                All {event.max_participants} seats for{" "}
+                <strong className="text-[#1A1A1A]">
+                  {formatDate(event.event_date)}
+                </strong>{" "}
+                are taken.
+              </p>
+              <p className="text-[#6B7280] mb-8">
+                See you next week! 🙌
+              </p>
+              <div className="space-y-3">
+                <Link
+                  href="/"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-xl transition-all"
+                >
+                  Back to Home
+                </Link>
+                <Link
+                  href="/cancel"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-[#F3F4F6] text-[#6B7280] font-medium rounded-xl border border-[#E5E7EB] transition-all"
+                >
+                  Cancel a Booking
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
       </div>
     );
   }
@@ -270,6 +639,98 @@ export default function BookPage() {
     );
   }
 
+  if (step === "confirm") {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="max-w-lg w-full animate-fadeIn">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-[#1A1A1A] mb-3">
+                Are you coming? 🙌
+              </h1>
+              <p className="text-[#6B7280]">
+                Confirm your attendance for {formatDate(event.event_date)} at {event.venue_name}.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8]">
+              {bookingError && (
+                <div className="mb-5 p-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-sm text-center">
+                  {bookingError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={confirmMemberBooking}
+                  disabled={submitting}
+                  className="px-5 py-4 bg-[#F47B20] hover:bg-[#D96A15] disabled:bg-[#F47B20]/50 text-white font-bold rounded-2xl transition-all"
+                >
+                  {submitting ? "Confirming..." : "Yes, I'm in!"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep("declined")}
+                  disabled={submitting}
+                  className="px-5 py-4 bg-white hover:bg-[#F3F4F6] text-[#374151] font-bold rounded-2xl border border-[#E5E7EB] transition-all"
+                >
+                  No, see you next time
+                </button>
+              </div>
+
+              <div className="border-t border-[#EDE5D8] mt-8 pt-8 text-center">
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-1">
+                  Want to support us?
+                </h3>
+                <p className="text-sm text-[#6B7280] mb-5">
+                  This event is free. Contributions are optional.
+                </p>
+                <Image
+                  src="/images/qris.jpeg"
+                  alt="QRIS English Club Jogja"
+                  width={220}
+                  height={220}
+                  className="mx-auto rounded-2xl border border-[#E5E7EB]"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (step === "declined") {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="max-w-md w-full text-center animate-fadeIn">
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8]">
+              <h1 className="text-3xl font-bold text-[#1A1A1A] mb-3">
+                See you next time! 👋
+              </h1>
+              <p className="text-[#6B7280] mb-6">
+                No worries. We hope to see you at a future English Club Jogja session.
+              </p>
+              <button
+                type="button"
+                onClick={() => setStep("confirm")}
+                className="w-full px-6 py-3 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-xl transition-all"
+              >
+                I changed my mind
+              </button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   // CHOOSE STEP
   if (step === "choose") {
     return (
@@ -286,7 +747,92 @@ export default function BookPage() {
               </p>
             </div>
 
-            <div className="space-y-4">
+            {showMemberLogin && (
+              <form
+                onSubmit={handleMemberLogin}
+                className="bg-white rounded-2xl p-6 shadow-sm border-2 border-[#F47B20] space-y-5"
+              >
+                <div>
+                  <h3 className="font-bold text-[#1A1A1A] text-lg">Member Login</h3>
+                  <p className="text-sm text-[#6B7280] mt-1">
+                    Log in to use your saved profile.
+                  </p>
+                </div>
+
+                {loginError && (
+                  <div className="p-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-sm">
+                    {loginError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#F47B20]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
+                    className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#F47B20]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loggingIn}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F47B20] hover:bg-[#D96A15] disabled:bg-[#F47B20]/50 text-white font-semibold rounded-xl transition-all"
+                >
+                  {loggingIn ? <Loader2 size={20} className="animate-spin" /> : <LogIn size={20} />}
+                  Log In
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowMemberLogin(false)}
+                  className="w-full text-sm text-[#6B7280] hover:text-[#F47B20]"
+                >
+                  Back to booking options
+                </button>
+
+                <div className="flex items-center justify-between text-sm">
+                  <p className="text-[#6B7280]">
+                    Don&apos;t have an account?{" "}
+                    <Link
+                      href="/register"
+                      className="font-semibold text-[#F47B20] hover:text-[#D96A15]"
+                    >
+                      Sign up here
+                    </Link>
+                  </p>
+                  <Link
+                    href="/forgot-password"
+                    className="font-semibold text-[#3B7DD8] hover:text-[#2D5FA8]"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+              </form>
+            )}
+
+            <div className={`space-y-4 ${showMemberLogin ? "hidden" : ""}`}>
               {/* Member option */}
               <button
                 onClick={() => handleChoice(true)}
@@ -301,7 +847,7 @@ export default function BookPage() {
                       I&apos;m a Member
                     </h3>
                     <p className="text-sm text-[#6B7280]">
-                      Log in and confirm — it takes 2 seconds ✨
+                      Log in to use your saved profile and confirm ✨
                     </p>
                   </div>
                   <ArrowRight
@@ -355,7 +901,20 @@ export default function BookPage() {
                 <span className="font-medium text-[#374151]">
                   {user.email}
                 </span>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="ml-2 text-[#F47B20] font-semibold hover:text-[#D96A15] underline"
+                >
+                  (Log out)
+                </button>
               </p>
+            )}
+
+            {attendees.length > 0 && event && (
+              <div className="mt-6 flex justify-center">
+                <GoingPill attendees={attendees} eventId={event.id} />
+              </div>
             )}
           </div>
         </div>
@@ -387,10 +946,33 @@ export default function BookPage() {
 
           <form onSubmit={handleSubmit}>
             <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8] space-y-6">
-              {/* Full Name */}
+              {/* Error display for guest booking */}
+              {bookingError && (
+                <div className="p-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-sm text-center">
+                  {bookingError}
+                </div>
+              )}
+
+              {/* Logout hint for logged-in users booking as guest */}
+              {user && !isMember && (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#FFF3EB] border border-[#FDE68A] text-sm">
+                  <span className="text-[#92400E]">
+                    Logged in as <strong>{user.email}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="text-[#F47B20] font-semibold hover:text-[#D96A15] underline"
+                  >
+                    Log out
+                  </button>
+                </div>
+              )}
+
+              {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-[#374151] mb-1.5">
-                  Full Name <span className="text-[#EF4444]">*</span>
+                  Name <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
                   type="text"
@@ -439,6 +1021,46 @@ export default function BookPage() {
                   required
                   className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
                 />
+              </div>
+
+              {/* Age Range */}
+              <div>
+                <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                  Age Range <span className="text-[#EF4444]">*</span>
+                </label>
+                <select
+                  value={formData.age_range}
+                  onChange={(e) =>
+                    setFormData({ ...formData, age_range: e.target.value })
+                  }
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
+                >
+                  <option value="">Select your age range</option>
+                  {AGE_RANGES.map((range) => (
+                    <option key={range} value={range}>{range}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* MBTI */}
+              <div>
+                <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                  MBTI Personality Type <span className="text-[#EF4444]">*</span>
+                </label>
+                <select
+                  value={formData.mbti}
+                  onChange={(e) =>
+                    setFormData({ ...formData, mbti: e.target.value })
+                  }
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
+                >
+                  <option value="">Select your MBTI</option>
+                  {MBTI_OPTIONS.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Occupation */}
@@ -608,7 +1230,7 @@ export default function BookPage() {
                   <Loader2 size={24} className="animate-spin" />
                 ) : (
                   <>
-                    Book Your Seat
+                    {isMember ? "Confirm Booking" : "Book Your Seat"}
                     <ArrowRight size={22} />
                   </>
                 )}

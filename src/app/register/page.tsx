@@ -1,17 +1,37 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, UserPlus, Loader2 } from "lucide-react";
+import {
+  OCCUPATION_OPTIONS,
+  DOMICILE_OPTIONS,
+  INTEREST_OPTIONS,
+  EXPECTATION_OPTIONS,
+  AGE_RANGES,
+  MBTI_OPTIONS,
+} from "@/lib/constants";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
     username: "",
     password: "",
     confirmPassword: "",
+    full_name: "",
+    phone: "",
+    occupation: "Student",
+    domicile: "Kota Yogyakarta",
+    instagram: "",
+    interests: [] as string[],
+    expectations: [] as string[],
+    expectation_other: "",
+    age_range: "",
+    mbti: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,6 +39,24 @@ export default function RegisterPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const toggleInterest = (interest: string) => {
+    setFormData((previous) => ({
+      ...previous,
+      interests: previous.interests.includes(interest)
+        ? previous.interests.filter((item) => item !== interest)
+        : [...previous.interests, interest],
+    }));
+  };
+
+  const toggleExpectation = (expectation: string) => {
+    setFormData((previous) => ({
+      ...previous,
+      expectations: previous.expectations.includes(expectation)
+        ? previous.expectations.filter((item) => item !== expectation)
+        : [...previous.expectations, expectation],
+    }));
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -69,10 +107,16 @@ export default function RegisterPage() {
         id: data.user.id,
         email: formData.email,
         username: formData.username,
-        full_name: "",
-        phone: "",
-        occupation: "General",
-        domicile: "",
+        full_name: formData.full_name,
+        phone: formData.phone,
+        occupation: formData.occupation,
+        domicile: formData.domicile,
+        instagram: formData.instagram,
+        interests: formData.interests,
+        expectations: formData.expectations,
+        expectation_other: formData.expectation_other,
+        age_range: formData.age_range,
+        mbti: formData.mbti,
         is_member: true,
       });
 
@@ -81,7 +125,7 @@ export default function RegisterPage() {
       }
     }
 
-    window.location.href = "/book";
+    router.push("/book");
   };
 
   return (
@@ -114,10 +158,10 @@ export default function RegisterPage() {
           </div>
 
           <h1 className="text-2xl font-bold text-center text-[#1A1A1A] mb-2">
-            Join the crew! 🎉
+            Create your member account 🎉
           </h1>
           <p className="text-center text-[#6B7280] mb-8">
-            Create an account for faster booking next time
+            Complete your profile once, then confirm future bookings in seconds
           </p>
 
           {error && (
@@ -156,6 +200,155 @@ export default function RegisterPage() {
                 placeholder="coolenglishuser"
                 required
                 className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
+              />
+            </div>
+
+            {/* Profile details */}
+            <div>
+              <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                Name
+              </label>
+              <input
+                type="text"
+                name="full_name"
+                value={formData.full_name}
+                onChange={handleChange}
+                placeholder="Your full name"
+                required
+                className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="08xxxxxxxxxx"
+                required
+                className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                Age Range <span className="text-[#EF4444]">*</span>
+              </label>
+              <select
+                value={formData.age_range}
+                onChange={(e) => setFormData({ ...formData, age_range: e.target.value })}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
+              >
+                <option value="">Select your age range</option>
+                {AGE_RANGES.map((range) => <option key={range} value={range}>{range}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                MBTI Personality Type <span className="text-[#EF4444]">*</span>
+              </label>
+              <select
+                value={formData.mbti}
+                onChange={(e) => setFormData({ ...formData, mbti: e.target.value })}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
+              >
+                <option value="">Select your MBTI</option>
+                {MBTI_OPTIONS.map((type) => <option key={type} value={type}>{type}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                What do you do?
+              </label>
+              <select
+                value={formData.occupation}
+                onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
+              >
+                {OCCUPATION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                Where are you based?
+              </label>
+              <select
+                value={formData.domicile}
+                onChange={(e) => setFormData({ ...formData, domicile: e.target.value })}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
+              >
+                {DOMICILE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                Instagram <span className="text-[#9CA3AF]">(optional)</span>
+              </label>
+              <input
+                type="text"
+                name="instagram"
+                value={formData.instagram}
+                onChange={handleChange}
+                placeholder="@yourusername"
+                className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#374151] mb-3">
+                Your Interests <span className="text-[#9CA3AF]">(optional)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {INTEREST_OPTIONS.map((interest) => (
+                  <button
+                    key={interest}
+                    type="button"
+                    onClick={() => toggleInterest(interest)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${formData.interests.includes(interest) ? "bg-[#F47B20] text-white" : "bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"}`}
+                  >
+                    {interest}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#374151] mb-3">
+                What are you looking for? <span className="text-[#9CA3AF]">(optional)</span>
+              </label>
+              <div className="space-y-2">
+                {EXPECTATION_OPTIONS.map((expectation) => (
+                  <label key={expectation} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#F3F4F6] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.expectations.includes(expectation)}
+                      onChange={() => toggleExpectation(expectation)}
+                      className="w-4 h-4 rounded border-[#D1D5DB] text-[#F47B20] focus:ring-[#F47B20]"
+                    />
+                    <span className="text-sm text-[#374151]">{expectation}</span>
+                  </label>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={formData.expectation_other}
+                onChange={(e) => setFormData({ ...formData, expectation_other: e.target.value })}
+                placeholder="Anything else? (optional)"
+                className="w-full mt-3 px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
               />
             </div>
 

@@ -105,11 +105,11 @@ create policy "Users can create bookings"
 
 create policy "Users can update their own bookings"
   on bookings for update
-  using (auth.uid() = user_id or user_id is null);
-
-create policy "Guests can cancel with booking id"
-  on bookings for update
-  using (true);
+  using (
+    auth.uid() = user_id
+    or user_id is null
+    or status = 'confirmed'
+  );
 
 -- ============================================
 -- 6. FUNCTIONS

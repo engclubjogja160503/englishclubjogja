@@ -2,11 +2,57 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Menu, X, LogOut } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Navbar() {
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUser({ email: data.user.email || "" });
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ? { email: session.user.email || "" } : null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUser(null);
+    setMobileOpen(false);
+    setLoggingOut(false);
+    router.push("/");
+  };
+
+  const navItems = user
+    ? [
+        { href: "/", label: "Home" },
+        { href: "/profile", label: "Profile" },
+        { href: "/book", label: "Book Seat" },
+        { href: "/cancel", label: "Cancel Booking" },
+        { href: "/donate", label: "Donate" },
+      ]
+    : [
+        { href: "/", label: "Home" },
+        { href: "/login", label: "Sign In" },
+        { href: "/book", label: "Book Seat" },
+        { href: "/cancel", label: "Cancel Booking" },
+        { href: "/donate", label: "Donate" },
+      ];
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#EDE5D8]">
@@ -26,9 +72,21 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            <NavLink href="/">Home</NavLink>
-            <NavLink href="/book">Book a Seat</NavLink>
-            <NavLink href="/cancel">Cancel Booking</NavLink>
+            {navItems.map((item) => (
+              <NavLink key={item.href} href={item.href}>
+                {item.label}
+              </NavLink>
+            ))}
+            {user && (
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-[#DC2626] hover:bg-[#FEF2F2] transition-colors disabled:opacity-50"
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            )}
           </div>
 
           {/* Mobile toggle */}
@@ -44,19 +102,26 @@ export default function Navbar() {
         {/* Mobile menu */}
         {mobileOpen && (
           <div className="md:hidden pb-4 animate-fadeIn">
-            <NavLink href="/" mobile onClick={() => setMobileOpen(false)}>
-              Home
-            </NavLink>
-            <NavLink href="/book" mobile onClick={() => setMobileOpen(false)}>
-              Book a Seat
-            </NavLink>
-            <NavLink
-              href="/cancel"
-              mobile
-              onClick={() => setMobileOpen(false)}
-            >
-              Cancel Booking
-            </NavLink>
+            {navItems.map((item) => (
+              <NavLink
+                key={item.href}
+                href={item.href}
+                mobile
+                onClick={() => setMobileOpen(false)}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+            {user && (
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[#DC2626] hover:bg-[#FEF2F2] transition-colors disabled:opacity-50"
+              >
+                <LogOut size={16} />
+                {loggingOut ? "Logging out..." : "Logout"}
+              </button>
+            )}
           </div>
         )}
       </div>
