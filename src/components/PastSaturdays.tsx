@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { countConfirmed } from "@/lib/attendees";
 import { type EventData, DEFAULT_TOPIC, formatDate, parseTopic, todayInJogja, venueLine } from "@/lib/events";
 
 type PastEvent = Pick<EventData, "id" | "event_date" | "venue_name" | "venue_address" | "description"> & {
@@ -35,12 +36,7 @@ export default function PastSaturdays({
       if (variant === "list") {
         await Promise.all(
           past.map(async (evt) => {
-            const { count } = await supabase
-              .from("bookings")
-              .select("*", { count: "exact", head: true })
-              .eq("event_id", evt.id)
-              .eq("status", "confirmed");
-            evt.booked = count || 0;
+            evt.booked = await countConfirmed(supabase, evt.id);
           })
         );
       }

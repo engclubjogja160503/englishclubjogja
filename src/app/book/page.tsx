@@ -17,6 +17,7 @@ import {
   MBTI_OPTIONS,
 } from "@/lib/constants";
 import { isUpcoming } from "@/lib/events";
+import { countConfirmed, fetchAttendees } from "@/lib/attendees";
 
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_WEBHOOK_URL;
 
@@ -129,17 +130,9 @@ export default function BookPage() {
         const activeEvent = visible[0];
         setEvent(activeEvent);
 
-        const { data: confirmedBookings } = await supabase
-          .from("bookings")
-          .select("id, guest_name, profiles(full_name, username, avatar_url)")
-          .eq("event_id", activeEvent.id)
-          .eq("status", "confirmed")
-          .order("created_at", { ascending: true });
-
-        if (confirmedBookings) {
-          setAttendees(confirmedBookings as unknown as AttendeeData[]);
-          setBookingCount(confirmedBookings.length);
-        }
+        const confirmedBookings = await fetchAttendees(supabase, activeEvent.id);
+        setAttendees(confirmedBookings);
+        setBookingCount(confirmedBookings.length);
       }
       setLoading(false);
     }
@@ -210,13 +203,8 @@ export default function BookPage() {
     const supabase = createClient();
 
     // Re-check capacity before booking
-    const { count: currentCount } = await supabase
-      .from("bookings")
-      .select("*", { count: "exact", head: true })
-      .eq("event_id", event.id)
-      .eq("status", "confirmed");
-
-    if ((currentCount || 0) >= event.max_participants) {
+    const currentCount = await countConfirmed(supabase, event.id);
+    if (currentCount >= event.max_participants) {
       setBookingError("Sorry, this event is now fully booked.");
       setSubmitting(false);
       return;
@@ -395,36 +383,11 @@ export default function BookPage() {
     const supabase = createClient();
 
     // Re-check capacity before booking
-    const { count: currentCount } = await supabase
-      .from("bookings")
-      .select("*", { count: "exact", head: true })
-      .eq("event_id", event.id)
-      .eq("status", "confirmed");
-
-    if ((currentCount || 0) >= event.max_participants) {
+    const currentCount = await countConfirmed(supabase, event.id);
+    if (currentCount >= event.max_participants) {
       setBookingError("Sorry, this event is now fully booked.");
       setSubmitting(false);
       return;
-    }
-
-    // One seat per guest email per event.
-    if (!(isMember && user) && formData.email.trim()) {
-      const { data: existingGuest } = await supabase
-        .from("bookings")
-        .select("id")
-        .eq("event_id", event.id)
-        .eq("status", "confirmed")
-        .is("user_id", null)
-        .ilike("guest_email", formData.email.trim().replace(/[%_\\]/g, "\\$&"))
-        .limit(1)
-        .maybeSingle();
-      if (existingGuest) {
-        setBookingError(
-          "This email already has a seat for this Saturday. See you there! If you need to cancel, use the Cancel a booking page."
-        );
-        setSubmitting(false);
-        return;
-      }
     }
 
     // If member, update profile
@@ -446,60 +409,46 @@ export default function BookPage() {
       });
     }
 
-    // Create booking
-    const bookingData: Record<string, unknown> = {
-      event_id: event.id,
-      status: "confirmed",
-      is_member: isMember,
-    };
-
-    if (isMember && user) {
-      bookingData.user_id = user.id;
-    } else {
-      bookingData.guest_name = formData.full_name;
-      bookingData.guest_phone = formData.phone;
-      bookingData.guest_email = formData.email;
-      // Guest demographics — read by the admin panel (requires the
-      // add-guest-details migration; falls back gracefully if missing).
-      bookingData.guest_age_range = formData.age_range;
-      bookingData.guest_mbti = formData.mbti;
-      bookingData.guest_occupation = formData.occupation;
-      bookingData.guest_domicile = formData.domicile;
-      bookingData.guest_instagram = formData.instagram;
-    }
-
     let booking: { id: string } | null = null;
     let bookingError: { message: string } | null = null;
-    {
+
+    if (isMember && user) {
       const res = await supabase
         .from("bookings")
-        .insert(bookingData)
+        .insert({ event_id: event.id, user_id: user.id, status: "confirmed", is_member: true })
         .select("id")
         .single();
       booking = res.data;
       bookingError = res.error;
-      // Fallback for databases where the guest_* columns don't exist yet:
-      // retry with only the original columns.
-      if (bookingError && /guest_/.test(bookingError.message)) {
-        const fallbackData: Record<string, unknown> = {
-          event_id: event.id,
-          status: "confirmed",
-          is_member: isMember,
+    } else {
+      // Guests book through a database function, so the bookings table
+      // (with everyone's emails and phone numbers) never has to be public.
+      const res = await supabase.rpc("create_guest_booking", {
+        p_event_id: event.id,
+        p_name: formData.full_name,
+        p_phone: formData.phone,
+        p_email: formData.email,
+        p_age_range: formData.age_range,
+        p_mbti: formData.mbti,
+        p_occupation: formData.occupation,
+        p_domicile: formData.domicile,
+        p_instagram: formData.instagram,
+      });
+      if (res.error) {
+        const code = res.error.message;
+        bookingError = {
+          message: code.includes("ALREADY_BOOKED")
+            ? "This email already has a seat for this Saturday. See you there! If you need to cancel, use the Cancel a booking page."
+            : code.includes("EVENT_FULL")
+            ? "Sorry, this event is now fully booked."
+            : code.includes("EVENT_UNAVAILABLE")
+            ? "This event is no longer open for booking."
+            : code.includes("MISSING_DETAILS")
+            ? "Please fill in your name and email."
+            : code,
         };
-        if (isMember && user) {
-          fallbackData.user_id = user.id;
-        } else {
-          fallbackData.guest_name = formData.full_name;
-          fallbackData.guest_phone = formData.phone;
-          fallbackData.guest_email = formData.email;
-        }
-        const retry = await supabase
-          .from("bookings")
-          .insert(fallbackData)
-          .select("id")
-          .single();
-        booking = retry.data;
-        bookingError = retry.error;
+      } else {
+        booking = { id: res.data as string };
       }
     }
 

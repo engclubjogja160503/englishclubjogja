@@ -18,30 +18,30 @@ const HEADLINE = ["No", "grades.", "No", "pressure.", "Just", "conversations."];
 const STEPS = [
   {
     title: "Show up as you are",
-    text: "Grab a seat and a drink. Plenty of people come alone the first time. Nobody checks your grammar at the door.",
+    text: "Grab a seat and say hi. Coming alone is completely fine, and nobody checks your grammar at the door.",
   },
   {
     title: "Break the ice",
-    text: "A quick warm-up game so everyone has spoken at least once before the real conversation starts.",
+    text: "We start with something light, so everyone has spoken at least once before the main topic.",
   },
   {
     title: "Talk in small groups",
-    text: "We split into small tables around the week's topic. Small groups mean you actually get to talk, not just listen.",
+    text: "We talk through the week's topic in small groups, so you actually get to speak, not just listen.",
   },
   {
     title: "Share with the room",
-    text: "Groups pass the mic and share the best ideas, the hot takes, and whatever made their table laugh.",
+    text: "Groups share their best ideas and hot takes with everyone.",
   },
   {
     title: "Stay for the group photo",
-    text: "And usually for a while after. This is the part where strangers turn into friends.",
+    text: "This is the part where strangers start turning into friends.",
   },
 ];
 
 const FAQ = [
   {
     q: "My English isn't very good. Can I still come?",
-    a: "Yes. That's exactly why we exist. Beginners and fluent speakers sit at the same tables, and nobody is graded or corrected in front of everyone. Mistakes are part of the deal.",
+    a: "Yes. That's exactly why we exist. There are no grades and no tests, and mistakes are part of the deal.",
   },
   {
     q: "Is it really free?",
@@ -53,7 +53,7 @@ const FAQ = [
   },
   {
     q: "I'm coming alone. Is that weird?",
-    a: "Not at all. Lots of people come alone, and the small-group format means you'll be talking to new people within minutes.",
+    a: "Not at all. Talking in small groups makes it easy to meet new people, even if you don't know anyone yet.",
   },
   {
     q: "What if I book and can't make it?",
@@ -225,7 +225,7 @@ export default function HomePage() {
                 </Reveal>
                 <Reveal delay={200} className="col-span-2 flex flex-col justify-end">
                   <p className="font-display font-bold text-[clamp(1.1rem,2vw,1.6rem)] leading-tight text-[#2D5FA8] -rotate-2 origin-bottom-left">
-                    Everyone gets a turn with the mic.
+                    Sharing ideas with the whole room.
                   </p>
                   <p className="eyebrow text-[#6B7280] mt-3">Real nights, real members</p>
                 </Reveal>

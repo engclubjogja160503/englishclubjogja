@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { createClient } from "@/lib/supabase/client";
+import { fetchAttendees } from "@/lib/attendees";
 import { attendeeName, type GoingAttendee } from "@/components/GoingPill";
 import { Loader2, Users, ArrowLeft, Calendar, MapPin } from "lucide-react";
 
@@ -57,14 +58,9 @@ function AttendeesContent() {
         .maybeSingle();
       if (!ignore && evt) setEvent(evt as EventInfo);
 
-      const { data: bookings } = await supabase
-        .from("bookings")
-        .select("id, guest_name, profiles(full_name, username, avatar_url)")
-        .eq("event_id", eventId)
-        .eq("status", "confirmed")
-        .order("created_at", { ascending: true });
+      const list = await fetchAttendees(supabase, eventId);
       if (!ignore) {
-        if (bookings) setAttendees(bookings as unknown as GoingAttendee[]);
+        setAttendees(list);
         setLoading(false);
       }
     })();

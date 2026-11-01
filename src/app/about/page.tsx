@@ -56,7 +56,7 @@ export default function AboutPage() {
               English Club Jogja is a free, community-run club in Yogyakarta. Every Saturday night we pick a topic, sit in small groups, and talk about it in English. That&apos;s it. No teacher at the front, no fee, no certificate at the end.
             </p>
             <p className="lg:col-span-5 lg:col-start-8 text-lg text-[#374151] leading-relaxed">
-              People come to practise, to get over the fear of speaking, to meet people outside their campus or office, or just to fill a Saturday with something better than scrolling. Most stay for the people.
+              People come to practise, to get over the fear of speaking, to meet people outside their campus or office, or just to fill a Saturday with something better than scrolling.
             </p>
           </div>
         </section>

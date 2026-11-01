@@ -6,6 +6,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import GoingPill, { type GoingAttendee } from "@/components/GoingPill";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
+import { countConfirmed, fetchAttendees } from "@/lib/attendees";
 import {
   type EventData,
   formatDate,
@@ -20,21 +21,8 @@ async function loadCounts(supabase: ReturnType<typeof createClient>, ids: string
   const attendees: Record<string, GoingAttendee[]> = {};
   await Promise.all(
     ids.map(async (id) => {
-      const { count } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .eq("event_id", id)
-        .eq("status", "confirmed");
-      counts[id] = count || 0;
-
-      const { data: sample } = await supabase
-        .from("bookings")
-        .select("id, guest_name, profiles(full_name, username, avatar_url)")
-        .eq("event_id", id)
-        .eq("status", "confirmed")
-        .order("created_at", { ascending: true })
-        .limit(6);
-      if (sample) attendees[id] = sample as unknown as GoingAttendee[];
+      counts[id] = await countConfirmed(supabase, id);
+      attendees[id] = await fetchAttendees(supabase, id, 6);
     })
   );
   return { counts, attendees };

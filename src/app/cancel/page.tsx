@@ -122,21 +122,14 @@ function CancelPageContent() {
     setBookings([]);
 
     const supabase = createClient();
-    const field =
-      lookupType === "email" ? "guest_email" : "guest_phone";
     const value = lookupValue.trim();
 
-    const base = supabase
-      .from("bookings")
-      .select("id, guest_name, guest_email, guest_phone")
-      .eq("event_id", eventId)
-      .eq("status", "confirmed")
-      .is("user_id", null);
-    // Emails are matched case-insensitively, the same way cancel_guest_booking checks them.
-    const { data, error: queryError } =
-      field === "guest_email"
-        ? await base.ilike(field, value.replace(/[%_\\]/g, "\\$&"))
-        : await base.eq(field, value);
+    // Matches the email (case-insensitive) or phone exactly, the same way
+    // cancel_guest_booking verifies it, and returns only booking id + name.
+    const { data, error: queryError } = await supabase.rpc("find_guest_bookings", {
+      p_event_id: eventId,
+      p_verification: value,
+    });
 
     if (queryError) {
       setLookupError("Something went wrong. Please try again.");
@@ -152,7 +145,15 @@ function CancelPageContent() {
       return;
     }
 
-    setBookings(data as unknown as Booking[]);
+    setBookings(
+      (data as { id: string; guest_name: string | null }[]).map((b) => ({
+        id: b.id,
+        guest_name: b.guest_name,
+        guest_email: null,
+        guest_phone: null,
+        profiles: null,
+      }))
+    );
     setVerification(value);
     setLookupDone(true);
     setLookupLoading(false);

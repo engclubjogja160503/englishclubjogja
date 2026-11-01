@@ -86,7 +86,7 @@ export default function RegisterPage() {
 
     // Usernames are unique; catch a clash before creating the auth account.
     const { data: taken } = await supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("id")
       .eq("username", formData.username)
       .limit(1)
