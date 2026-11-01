@@ -1,84 +1,80 @@
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import Image from "next/image";
+import DoodleCrewFooter, { type CrewMember, type FooterColumn } from "@/components/ui/doodle-crew-footer";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
 
-const COLUMNS = [
+const INSTAGRAM_URL = "https://instagram.com/engclubjogja";
+
+const COLUMNS: FooterColumn[] = [
   {
-    heading: "The club",
+    title: "The club",
     links: [
-      { href: "/#this-saturday", label: "This Saturday" },
-      { href: "/saturdays", label: "Past Saturdays" },
-      { href: "/about", label: "About us" },
-      { href: "/about#collaborate", label: "Collaborate" },
+      { label: "Home", href: "/" },
+      { label: "About us", href: "/about" },
+      { label: "Collaborate", href: "/about#collaborate" },
+      { label: "Past Saturdays", href: "/saturdays" },
     ],
   },
   {
-    heading: "Your seat",
+    title: "Your seat",
     links: [
-      { href: "/book", label: "Save a seat" },
-      { href: "/cancel", label: "Cancel a booking" },
-      { href: "/login", label: "Member sign in" },
-      { href: "/register", label: "Become a member" },
+      { label: "Save a seat", href: "/book" },
+      { label: "Cancel a booking", href: "/cancel" },
+      { label: "Member sign in", href: "/login" },
+      { label: "Become a member", href: "/register" },
     ],
   },
   {
-    heading: "Keep in touch",
+    title: "Keep in touch",
     links: [
-      { href: WHATSAPP_GROUP_URL, label: "WhatsApp group", external: true },
-      { href: "https://instagram.com/engclubjogja", label: "Instagram @engclubjogja", external: true },
-      { href: "/donate", label: "Support us (QRIS)" },
+      { label: "WhatsApp group", href: WHATSAPP_GROUP_URL },
+      { label: "Instagram", href: INSTAGRAM_URL },
+      { label: "Donate (QRIS)", href: "/donate" },
     ],
   },
 ];
 
+// Character indices count across "ENGLISH CLUB" (0–11, space at 7) then "JOGJA" (12–16).
+const CREW: CrewMember[] = [
+  { kind: "yeti", letter: 12, seat: "front", offset: -0.6, name: "Bima", says: "First time here? Same! Let's talk." },
+  { kind: "bird", letter: 3, seat: "top", name: "Wren", says: "Small talk, big talk, all talk!" },
+  { kind: "ghost", letter: 5, seat: "behind", name: "Boo", says: "Boo! …sorry, I'm shy. Hi!" },
+  { kind: "kid", letter: 10, seat: "top", name: "Sekar", says: "Best seat in the house. And it's free!" },
+  { kind: "mushroom", letter: 16, seat: "front", offset: 1.1, scale: 0.95, name: "Jamur", says: "I'm a fun guy. Fluent-ish, too." },
+  { kind: "cat", letter: 16, seat: "front", offset: 2.2, flip: true, name: "Kopi", says: "Mistakes? We collect them here." },
+];
+
 export default function Footer() {
   return (
-    <footer className="mt-auto bg-[#1A1A1A] text-[#F5F0E8]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-16 pb-10">
-        <p className="font-display font-extrabold text-[clamp(2.4rem,7vw,5.5rem)] leading-[0.95] tracking-tight max-w-4xl">
-          No grades. No pressure.{" "}
-          <span className="text-[#F47B20]">Just conversations.</span>
-        </p>
-
-        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-10 border-t border-white/15 pt-10">
-          {COLUMNS.map((col) => (
-            <div key={col.heading} className="flex flex-col gap-3">
-              <p className="eyebrow text-[#F5F0E8]/50">{col.heading}</p>
-              <ul className="flex flex-col gap-2.5">
-                {col.links.map((l) => (
-                  <li key={l.label}>
-                    {"external" in l && l.external ? (
-                      <a
-                        href={l.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[15px] text-[#F5F0E8]/85 hover:text-[#F47B20]"
-                      >
-                        {l.label} <ArrowUpRight size={14} />
-                      </a>
-                    ) : (
-                      <Link href={l.href} className="text-[15px] text-[#F5F0E8]/85 hover:text-[#F47B20]">
-                        {l.label}
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          <div className="col-span-2 md:col-span-1 flex flex-col gap-3">
-            <p className="eyebrow text-[#F5F0E8]/50">When</p>
-            <p className="text-[15px] text-[#F5F0E8]/85 leading-relaxed">
-              Every Saturday night in Yogyakarta. Free, always. The topic and venue drop in the WhatsApp group during the week.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-14 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#F5F0E8]/45 eyebrow">
-          <span>© {new Date().getFullYear()} English Club Jogja</span>
-          <span>Made in Yogyakarta, by the people who show up</span>
-        </div>
-      </div>
-    </footer>
+    <DoodleCrewFooter
+      wordmark={"ENGLISH CLUB\nJOGJA"}
+      lineColors={["#F47B20", "#3B7DD8"]}
+      brand="English Club Jogja"
+      logo={
+        <Image
+          src="/images/logo-wordmark.png"
+          alt=""
+          width={648}
+          height={438}
+          className="h-11 w-auto rounded-sm"
+        />
+      }
+      blurb="A free English conversation community in Yogyakarta. Every Saturday night we pick a topic, sit in small groups, and talk."
+      tagline="No grades. No pressure. Just conversations."
+      columns={COLUMNS}
+      actions={[
+        { label: "Join the WhatsApp group", href: WHATSAPP_GROUP_URL, icon: "speech", variant: "outline" },
+        { label: "Save a seat", href: "/book", icon: "star", variant: "solid" },
+      ]}
+      copyright={`© ${new Date().getFullYear()} English Club Jogja. Made in Yogyakarta, by the people who show up.`}
+      socials={[
+        { label: "Instagram", href: INSTAGRAM_URL },
+        { label: "WhatsApp", href: WHATSAPP_GROUP_URL },
+      ]}
+      crew={CREW}
+      fontFamily="var(--font-bricolage), 'Arial Black', sans-serif"
+      fontWeight={800}
+      bodyFamily="var(--font-body), system-ui, sans-serif"
+      height="auto"
+    />
   );
 }
