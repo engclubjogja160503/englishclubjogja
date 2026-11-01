@@ -15,6 +15,7 @@ import {
   Search,
 } from "lucide-react";
 import { isUpcoming } from "@/lib/events";
+import NoUpcomingEvent from "@/components/NoUpcomingEvent";
 
 interface Booking {
   id: string;
@@ -37,6 +38,7 @@ function CancelPageContent() {
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState("");
   const [eventId, setEventId] = useState("");
+  const [noEvent, setNoEvent] = useState(false);
 
   // Guest lookup state
   const [lookupValue, setLookupValue] = useState("");
@@ -84,6 +86,7 @@ function CancelPageContent() {
 
       const visible = (events || []).filter((e) => !e.is_archived && isUpcoming(e));
       if (visible.length === 0) {
+        setNoEvent(true);
         setLoading(false);
         return;
       }
@@ -225,6 +228,21 @@ function CancelPageContent() {
     if (booking.profiles?.full_name) return booking.profiles.full_name;
     return `Participant #${(index ?? 0) + 1}`;
   };
+
+  if (!loading && noEvent) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center px-4 py-16">
+          <NoUpcomingEvent
+            title="No upcoming Saturday to cancel"
+            text="There's no session open right now, so there's nothing to cancel. The next topic is announced in our WhatsApp group first."
+          />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F0E8]">

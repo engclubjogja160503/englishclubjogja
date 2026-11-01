@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { Loader2, Save, UserRound, Camera, X, Check } from "lucide-react";
 import {
   DOMICILE_OPTIONS,
@@ -272,7 +273,7 @@ export default function ProfilePage() {
   const displayUrl = avatarPreview || avatarUrl;
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8]">
+    <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
       <Navbar />
 
       {showCrop && (
@@ -354,7 +355,7 @@ export default function ProfilePage() {
 
       <canvas ref={canvasRef} className="hidden" />
 
-      <main className="max-w-2xl mx-auto px-4 py-10">
+      <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-10">
         <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-lg border border-[#EDE5D8]">
           <div className="text-center mb-8">
             <div className="relative mx-auto mb-4 w-24 h-24">
@@ -619,6 +620,7 @@ export default function ProfilePage() {
           </form>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

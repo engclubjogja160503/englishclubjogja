@@ -487,9 +487,14 @@ export default function AdminPage() {
               <LogIn size={48} className="mx-auto mb-4 text-[#F47B20]" />
               <h2 className="text-xl font-bold text-[#1A1A1A] mb-2">Login Required</h2>
               <p className="text-[#6B7280] mb-6">You need to be logged in to access the admin dashboard.</p>
-              <Link href="/login" className="inline-flex items-center gap-2 px-6 py-3 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-xl transition-all">
-                Sign In
-              </Link>
+              <div className="flex flex-col items-center gap-3">
+                <Link href="/login" className="inline-flex items-center gap-2 px-6 py-3 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-xl transition-all">
+                  Sign In
+                </Link>
+                <Link href="/" className="text-sm font-medium text-[#6B7280] hover:text-[#D96A15]">
+                  &larr; Back to home
+                </Link>
+              </div>
             </div>
           </div>
         </div>

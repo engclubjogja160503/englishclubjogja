@@ -7,6 +7,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GoingPill from "@/components/GoingPill";
+import NoUpcomingEvent from "@/components/NoUpcomingEvent";
 import { CheckCircle, Loader2, User, ArrowRight, LogIn } from "lucide-react";
 import {
   OCCUPATION_OPTIONS,
@@ -508,16 +509,10 @@ export default function BookPage() {
     return (
       <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center text-center px-4">
-          <div>
-            <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">
-              No upcoming events
-            </h2>
-            <p className="text-[#6B7280]">
-              Stay tuned for the next Saturday night!
-            </p>
-          </div>
+        <div className="flex-1 flex items-center justify-center px-4 py-16">
+          <NoUpcomingEvent />
         </div>
+        <Footer />
       </div>
     );
   }
@@ -619,6 +614,7 @@ export default function BookPage() {
             </div>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -707,6 +703,12 @@ export default function BookPage() {
               >
                 I changed my mind
               </button>
+              <Link
+                href="/"
+                className="mt-3 w-full inline-flex items-center justify-center px-6 py-3 bg-white hover:bg-[#F3F4F6] text-[#374151] font-semibold rounded-xl border border-[#E5E7EB] transition-all"
+              >
+                Back to Home
+              </Link>
             </div>
           </div>
         </div>
@@ -904,8 +906,15 @@ export default function BookPage() {
                 />
               </div>
             )}
+
+            <div className="mt-8 text-center">
+              <Link href="/" className="text-sm font-medium text-[#6B7280] hover:text-[#D96A15]">
+                &larr; Back to home
+              </Link>
+            </div>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }

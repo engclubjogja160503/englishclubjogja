@@ -66,6 +66,12 @@ export default function ResetPasswordPage() {
       </div>
 
       <div className="w-full max-w-md relative animate-fadeIn">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 text-sm text-[#6B7280] hover:text-[#F47B20] mb-8 transition-colors"
+        >
+          &larr; Back to home
+        </Link>
         <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8]">
           <div className="flex justify-center mb-6">
             <Image
