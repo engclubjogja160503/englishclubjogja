@@ -199,14 +199,15 @@ h1, h2, h3 { text-wrap: balance; }
   text-transform: uppercase;
 }
 
-/* Headline words rise in once, on first paint. End state is the resting state. */
+/* Headline words rise in once, on first paint. Motion only — the text is never
+   hidden, so it stays readable even if the browser skips or pauses animations. */
 @keyframes wordRise {
-  from { opacity: 0; transform: translateY(0.45em); }
-  to { opacity: 1; transform: translateY(0); }
+  from { transform: translateY(0.3em); }
+  to { transform: translateY(0); }
 }
 .word-rise > span {
   display: inline-block;
-  animation: wordRise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: wordRise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
 }
 
 /* Hero photo burst: three takes of the same group photo, like a self-timer. */
@@ -222,27 +223,27 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* Seat map squares fill one by one */
 @keyframes seatFill {
-  from { background-color: transparent; transform: scale(0.6); }
+  from { transform: scale(0.6); }
   to { transform: scale(1); }
 }
-.seat-taken { animation: seatFill 0.35s ease-out both; }
+.seat-taken { animation: seatFill 0.35s ease-out backwards; }
 
 /* Flash shutter when the burst changes take */
 @keyframes shutter {
   0%, 32.5%, 34.5%, 65.8%, 67.8%, 99%, 100% { opacity: 0; }
   33.3%, 66.6% { opacity: 0.35; }
 }
-.shutter { animation: shutter 13.5s linear infinite; animation-delay: 0s; }
+/* Invisible unless the animation is running, so it can never cover the photo. */
+.shutter { opacity: 0; animation: shutter 13.5s linear infinite; }
 
-/* Scroll reveal: content is visible by default; JS opts it into the effect. */
+/* Scroll reveal: a slide only, never an opacity change, so content can't get
+   stuck invisible on browsers that pause transitions. */
 [data-reveal="pending"] {
-  opacity: 0;
-  transform: translateY(28px);
+  transform: translateY(32px);
 }
 [data-reveal="shown"] {
-  opacity: 1;
   transform: none;
-  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 /* Photos ease in slightly on hover */

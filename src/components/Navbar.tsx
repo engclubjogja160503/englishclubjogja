@@ -9,10 +9,10 @@ import { createClient } from "@/lib/supabase/client";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
 
 const MAIN_LINKS = [
-  { href: "/#this-saturday", label: "This Saturday" },
-  { href: "/saturdays", label: "Past Saturdays" },
+  { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/about#collaborate", label: "Collaborate" },
+  { href: "/donate", label: "Donate" },
 ];
 
 export default function Navbar() {
@@ -56,7 +56,8 @@ export default function Navbar() {
   };
 
   const isActive = (href: string) =>
-    !href.includes("#") && (pathname === href || pathname.startsWith(href + "/"));
+    !href.includes("#") &&
+    (pathname === href || (href !== "/" && pathname.startsWith(href + "/")));
 
   return (
     // No backdrop-filter here: it would become the containing block for the fixed mobile menu.
@@ -142,7 +143,7 @@ export default function Navbar() {
         <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 bg-[#1A1A1A] text-[#F5F0E8] overflow-y-auto animate-fadeIn">
           <div className="px-6 pt-8 pb-12 flex flex-col gap-10 min-h-full">
             <ul className="flex flex-col gap-1">
-              {[{ href: "/", label: "Home" }, ...MAIN_LINKS].map((item, i) => (
+              {MAIN_LINKS.map((item, i) => (
                 <li key={item.href} className="word-rise">
                   <Link
                     href={item.href}
@@ -159,7 +160,6 @@ export default function Navbar() {
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[15px] border-t border-white/15 pt-6">
               <Link href="/book" onClick={() => setMobileOpen(false)} className="text-[#F47B20] font-semibold">Save a seat</Link>
               <Link href="/cancel" onClick={() => setMobileOpen(false)} className="text-[#F5F0E8]/80">Cancel a booking</Link>
-              <Link href="/donate" onClick={() => setMobileOpen(false)} className="text-[#F5F0E8]/80">Donate</Link>
               <a href={WHATSAPP_GROUP_URL} target="_blank" rel="noopener noreferrer" className="text-[#F5F0E8]/80 inline-flex items-center gap-1">
                 WhatsApp group <ArrowUpRight size={14} />
               </a>
