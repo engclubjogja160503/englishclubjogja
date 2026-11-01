@@ -291,3 +291,27 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   .photo-zoom img { transition: none; }
   .animate-pulse-glow, .animate-float, .animate-bounce { animation: none !important; }
 }
+
+/* Underline-style inputs (login card) keep their own focus colour. */
+input.line-input:focus {
+  box-shadow: none;
+  border-color: var(--orange) !important;
+}
+input.line-input:-webkit-autofill {
+  -webkit-text-fill-color: #fff;
+  transition: background-color 9999s ease-out;
+}
+
+/* Footer crew characters reused outside the footer (CrewFigure: ticket, booking moments). */
+.crew-art { fill: #fff; stroke: #1A1A1A; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.crew-art .n { fill: none; }
+.crew-art .k { fill: #1A1A1A; }
+.crew-art .a { fill: #F47B20; }
+.crew-art .b { fill: #3B7DD8; }
+.crew-art .thin { stroke-width: 1.5; }
+.crew-art .thick { stroke-width: 3.4; }
+.crew-art .glint { fill: #fff; stroke: none; }
+.crew-art .dcf-shadow { display: none; }
+@keyframes crewBlink { 0%, 94%, 100% { transform: none; } 96% { transform: scaleY(0.1); } }
+.crew-eye { transform-box: fill-box; transform-origin: 50% 50%; animation: crewBlink 4.6s infinite; }
+@media (prefers-reduced-motion: reduce) { .crew-eye { animation: none; } }

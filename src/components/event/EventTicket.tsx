@@ -155,18 +155,12 @@ const CSS = `
 /* Stands on the ticket's top edge, above the stub, so it never covers the text. */
 .tk-crew{position:absolute;bottom:calc(100% - var(--tk-pt) - 4px);right:48px;height:var(--tk-crew-h);z-index:2;transform-origin:50% 100%;animation:tk-peek .9s cubic-bezier(.3,1.4,.5,1) .35s backwards}
 .tk-crew-svg{display:block;height:100%;width:auto;overflow:visible}
-.crew-art{fill:#fff;stroke:#1A1A1A;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.crew-art .n{fill:none}.crew-art .k{fill:#1A1A1A}.crew-art .a{fill:#F47B20}.crew-art .b{fill:#3B7DD8}
-.crew-art .thin{stroke-width:1.5}.crew-art .thick{stroke-width:3.4}
-.crew-art .glint{fill:#fff;stroke:none}.crew-art .dcf-shadow{display:none}
-.crew-eye{transform-box:fill-box;transform-origin:50% 50%;animation:tk-blink 4.6s infinite}
 .tk-doodle{position:absolute;width:30px;height:30px;stroke:#1A1A1A;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round;z-index:3;animation:tk-float 5s ease-in-out infinite}
 .tk-doodle-0{top:26px;left:4px}
 .tk-doodle-1{bottom:0;left:38%;animation-delay:-1.6s}
 .tk-doodle-2{top:18px;right:6px;animation-delay:-3.2s}
 @keyframes tk-stamp{0%{transform:translateY(-14px) rotate(-5deg) scale(1.05)}60%{transform:translateY(2px) rotate(-.6deg) scale(.99)}100%{transform:rotate(-1.2deg)}}
 @keyframes tk-peek{0%{transform:translateY(40%) scale(.8)}100%{transform:none}}
-@keyframes tk-blink{0%,94%,100%{transform:none}96%{transform:scaleY(.1)}}
 @keyframes tk-float{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-8px) rotate(8deg)}}
 @media (max-width:640px){
   .tk{grid-template-columns:1fr;grid-template-rows:auto auto auto}
@@ -184,5 +178,5 @@ const CSS = `
   .tk-wrap,.tk-wrap.is-compact{--tk-pt:74px;--tk-crew-h:80px}
   .tk-crew{right:30px}
 }
-@media (prefers-reduced-motion:reduce){.tk,.tk-crew,.crew-eye,.tk-doodle{animation:none!important}.tk-wrap:hover .tk{transform:rotate(-1.2deg)}}
+@media (prefers-reduced-motion:reduce){.tk,.tk-crew,.tk-doodle{animation:none!important}.tk-wrap:hover .tk{transform:rotate(-1.2deg)}}
 `;

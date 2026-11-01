@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GoingPill from "@/components/GoingPill";
 import NoUpcomingEvent from "@/components/NoUpcomingEvent";
-import { CheckCircle, Loader2, User, ArrowRight, LogIn } from "lucide-react";
+import { Loader2, User, ArrowRight, LogIn } from "lucide-react";
 import {
   OCCUPATION_OPTIONS,
   DOMICILE_OPTIONS,
@@ -17,7 +17,8 @@ import {
   AGE_RANGES,
   MBTI_OPTIONS,
 } from "@/lib/constants";
-import { isUpcoming } from "@/lib/events";
+import { isUpcoming, type EventData as FullEvent } from "@/lib/events";
+import { BookedMoment } from "@/components/event/TicketMoments";
 import { countConfirmed, fetchAttendees } from "@/lib/attendees";
 
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_WEBHOOK_URL;
@@ -567,53 +568,13 @@ export default function BookPage() {
     return (
       <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center px-4 py-12">
-          <div className="max-w-md w-full text-center animate-slideUp">
-            <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8]">
-              <CheckCircle
-                size={64}
-                className="mx-auto mb-6 text-[#22C55E]"
-              />
-              <h1 className="text-2xl font-bold text-[#1A1A1A] mb-3">
-                You&apos;re in! 🎉
-              </h1>
-              <p className="text-[#6B7280] mb-6">
-                Your seat is booked for{" "}
-                <strong className="text-[#1A1A1A]">
-                  {formatDate(event.event_date)}
-                </strong>{" "}
-                at <strong className="text-[#1A1A1A]">{event.venue_name}</strong>
-                . See you there!
-              </p>
-
-              {bookingId && (
-                <div className="bg-[#F3F4F6] rounded-xl p-4 mb-6">
-                  <p className="text-xs text-[#9CA3AF] mb-1">
-                    Your Booking ID
-                  </p>
-                  <p className="font-mono font-bold text-[#374151] text-sm break-all">
-                    {bookingId}
-                  </p>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                <Link
-                  href="/"
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-xl transition-all"
-                >
-                  Back to Home
-                </Link>
-                <Link
-                  href={`/cancel?id=${bookingId}`}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-[#F3F4F6] text-[#6B7280] font-medium rounded-xl border border-[#E5E7EB] transition-all"
-                >
-                  Need to cancel? Click here
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+        <main className="flex-1">
+          <BookedMoment
+            event={event as unknown as FullEvent}
+            taken={Math.min(bookingCount + 1, event.max_participants)}
+            bookingId={bookingId}
+          />
+        </main>
         <Footer />
       </div>
     );

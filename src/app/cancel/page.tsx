@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { isUpcoming } from "@/lib/events";
 import NoUpcomingEvent from "@/components/NoUpcomingEvent";
+import { CancelledMoment } from "@/components/event/TicketMoments";
 
 interface Booking {
   id: string;
@@ -228,6 +229,18 @@ function CancelPageContent() {
     if (booking.profiles?.full_name) return booking.profiles.full_name;
     return `Participant #${(index ?? 0) + 1}`;
   };
+
+  if (showCancelledBanner) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
+        <Navbar />
+        <main className="flex-1">
+          <CancelledMoment onAnother={noEvent ? undefined : () => setShowCancelledBanner(false)} />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!loading && noEvent) {
     return (
