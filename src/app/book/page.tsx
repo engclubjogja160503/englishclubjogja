@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GoingPill from "@/components/GoingPill";
 import NoUpcomingEvent from "@/components/NoUpcomingEvent";
+import { CrewFigure } from "@/components/ui/doodle-crew-footer";
 import { Loader2, User, ArrowRight, LogIn } from "lucide-react";
 import {
   OCCUPATION_OPTIONS,
@@ -529,10 +530,10 @@ export default function BookPage() {
       <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
         <Navbar />
         <div className="flex-1 flex items-center justify-center px-4 py-12">
-          <div className="max-w-md w-full text-center animate-slideUp">
-            <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8]">
-              <div className="text-6xl mb-6">😅</div>
-              <h1 className="text-2xl font-bold text-[#1A1A1A] mb-3">
+          <div className="max-w-md w-full text-center dialog-rise">
+            <div className="bg-white rounded-xl p-6 sm:p-8 border-2 border-[#1A1A1A] shadow-[5px_5px_0_#1A1A1A]">
+              <CrewFigure kind="ghost" className="h-24 w-auto mx-auto mb-4" />
+              <h1 className="font-display font-extrabold text-3xl leading-tight text-[#1A1A1A] mb-3">
                 Fully Booked!
               </h1>
               <p className="text-[#6B7280] mb-2">
@@ -543,18 +544,18 @@ export default function BookPage() {
                 are taken.
               </p>
               <p className="text-[#6B7280] mb-8">
-                See you next week! 🙌
+                See you next week!
               </p>
               <div className="space-y-3">
                 <Link
                   href="/"
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-xl transition-all"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 font-semibold bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] disabled:opacity-60 text-[#1A1A1A] border-2 border-[#1A1A1A] shadow-[0_3px_0_#1A1A1A] rounded-lg transition-colors"
                 >
                   Back to Home
                 </Link>
                 <Link
                   href="/cancel"
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-[#F3F4F6] text-[#6B7280] font-medium rounded-xl border border-[#E5E7EB] transition-all"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 font-medium bg-white hover:bg-[#FFF3EB] text-[#1A1A1A] border-2 border-[#1A1A1A] rounded-lg transition-colors"
                 >
                   Cancel a Booking
                 </Link>
@@ -589,17 +590,17 @@ export default function BookPage() {
       <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
         <Navbar />
         <div className="flex-1 flex items-center justify-center px-4 py-12">
-          <div className="max-w-lg w-full animate-fadeIn">
+          <div className="max-w-lg w-full dialog-rise">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-[#1A1A1A] mb-3">
-                Are you coming? 🙌
+              <h1 className="font-display font-extrabold text-4xl sm:text-5xl leading-[0.95] tracking-tight text-[#1A1A1A] mb-3">
+                Are you coming?
               </h1>
               <p className="text-[#6B7280]">
                 Confirm your attendance for {formatDate(event.event_date)} at {event.venue_name}.
               </p>
             </div>
 
-            <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8]">
+            <div className="bg-white rounded-xl p-6 sm:p-8 border-2 border-[#1A1A1A] shadow-[5px_5px_0_#1A1A1A]">
               {bookingError && (
                 <div className="mb-5 p-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-sm text-center">
                   {bookingError}
@@ -611,7 +612,7 @@ export default function BookPage() {
                   type="button"
                   onClick={confirmMemberBooking}
                   disabled={submitting}
-                  className="px-5 py-4 bg-[#F47B20] hover:bg-[#D96A15] disabled:bg-[#F47B20]/50 text-white font-bold rounded-2xl transition-all"
+                  className="px-5 py-4 font-semibold bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] disabled:opacity-60 text-[#1A1A1A] border-2 border-[#1A1A1A] shadow-[0_3px_0_#1A1A1A] rounded-lg transition-colors"
                 >
                   {submitting ? "Confirming..." : "Yes, I'm in!"}
                 </button>
@@ -619,14 +620,14 @@ export default function BookPage() {
                   type="button"
                   onClick={() => setStep("declined")}
                   disabled={submitting}
-                  className="px-5 py-4 bg-white hover:bg-[#F3F4F6] text-[#374151] font-bold rounded-2xl border border-[#E5E7EB] transition-all"
+                  className="px-5 py-4 font-semibold bg-white hover:bg-[#FFF3EB] text-[#1A1A1A] border-2 border-[#1A1A1A] rounded-lg transition-colors"
                 >
                   No, see you next time
                 </button>
               </div>
 
               <div className="border-t border-[#EDE5D8] mt-8 pt-8 text-center">
-                <h3 className="text-lg font-bold text-[#1A1A1A] mb-1">
+                <h3 className="font-display text-xl font-bold text-[#1A1A1A] mb-1">
                   Want to support us?
                 </h3>
                 <p className="text-sm text-[#6B7280] mb-5">
@@ -653,10 +654,10 @@ export default function BookPage() {
       <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
         <Navbar />
         <div className="flex-1 flex items-center justify-center px-4 py-12">
-          <div className="max-w-md w-full text-center animate-fadeIn">
-            <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8]">
-              <h1 className="text-3xl font-bold text-[#1A1A1A] mb-3">
-                See you next time! 👋
+          <div className="max-w-md w-full text-center dialog-rise">
+            <div className="bg-white rounded-xl p-6 sm:p-8 border-2 border-[#1A1A1A] shadow-[5px_5px_0_#1A1A1A]">
+              <h1 className="font-display font-extrabold text-4xl sm:text-5xl leading-[0.95] tracking-tight text-[#1A1A1A] mb-3">
+                See you next time!
               </h1>
               <p className="text-[#6B7280] mb-6">
                 No worries. We hope to see you at a future English Club Jogja session.
@@ -664,13 +665,13 @@ export default function BookPage() {
               <button
                 type="button"
                 onClick={() => setStep("confirm")}
-                className="w-full px-6 py-3 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-xl transition-all"
+                className="w-full px-6 py-3 font-semibold bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] disabled:opacity-60 text-[#1A1A1A] border-2 border-[#1A1A1A] shadow-[0_3px_0_#1A1A1A] rounded-lg transition-colors"
               >
                 I changed my mind
               </button>
               <Link
                 href="/"
-                className="mt-3 w-full inline-flex items-center justify-center px-6 py-3 bg-white hover:bg-[#F3F4F6] text-[#374151] font-semibold rounded-xl border border-[#E5E7EB] transition-all"
+                className="mt-3 w-full inline-flex items-center justify-center px-6 py-3 font-semibold bg-white hover:bg-[#FFF3EB] text-[#1A1A1A] border-2 border-[#1A1A1A] rounded-lg transition-colors"
               >
                 Back to Home
               </Link>
@@ -688,10 +689,10 @@ export default function BookPage() {
       <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
         <Navbar />
         <div className="flex-1 flex items-center justify-center px-4 py-12">
-          <div className="max-w-lg w-full animate-fadeIn">
+          <div className="max-w-lg w-full dialog-rise">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-[#1A1A1A] mb-3">
-                Book Your Seat 🪑
+              <h1 className="font-display font-extrabold text-4xl sm:text-5xl leading-[0.95] tracking-tight text-[#1A1A1A] mb-3">
+                Save your seat
               </h1>
               <p className="text-[#6B7280]">
                 {formatDate(event.event_date)} @ {event.venue_name}
@@ -704,7 +705,7 @@ export default function BookPage() {
                 className="bg-white rounded-2xl p-6 shadow-sm border-2 border-[#F47B20] space-y-5"
               >
                 <div>
-                  <h3 className="font-bold text-[#1A1A1A] text-lg">Member Login</h3>
+                  <h3 className="font-display font-bold text-[#1A1A1A] text-xl">Member Login</h3>
                   <p className="text-sm text-[#6B7280] mt-1">
                     Log in to use your saved profile.
                   </p>
@@ -717,7 +718,7 @@ export default function BookPage() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                  <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-1.5">
                     Email
                   </label>
                   <input
@@ -727,12 +728,12 @@ export default function BookPage() {
                     required
                     autoComplete="email"
                     placeholder="you@example.com"
-                    className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#F47B20]"
+                    className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#F47B20]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                  <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-1.5">
                     Password
                   </label>
                   <input
@@ -742,14 +743,14 @@ export default function BookPage() {
                     required
                     autoComplete="current-password"
                     placeholder="Enter your password"
-                    className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#F47B20]"
+                    className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#F47B20]"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loggingIn}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F47B20] hover:bg-[#D96A15] disabled:bg-[#F47B20]/50 text-white font-semibold rounded-xl transition-all"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 font-semibold bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] disabled:opacity-60 text-[#1A1A1A] border-2 border-[#1A1A1A] shadow-[0_3px_0_#1A1A1A] rounded-lg transition-colors"
                 >
                   {loggingIn ? <Loader2 size={20} className="animate-spin" /> : <LogIn size={20} />}
                   Log In
@@ -787,18 +788,18 @@ export default function BookPage() {
               {/* Member option */}
               <button
                 onClick={() => handleChoice(true)}
-                className="w-full bg-white rounded-2xl p-6 shadow-sm border-2 border-[#EDE5D8] hover:border-[#F47B20] hover:shadow-md transition-all text-left group"
+                className="w-full bg-white rounded-xl p-6 border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#F47B20] transition-[transform,box-shadow] text-left group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#FFF3EB] flex items-center justify-center text-[#F47B20] group-hover:bg-[#F47B20] group-hover:text-white transition-colors">
+                  <div className="w-12 h-12 rounded-lg border-2 border-[#1A1A1A] bg-[#FFF3EB] flex items-center justify-center text-[#F47B20] group-hover:bg-[#F47B20] group-hover:text-white transition-colors">
                     <User size={24} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-[#1A1A1A] text-lg">
+                    <h3 className="font-display font-bold text-[#1A1A1A] text-xl">
                       I&apos;m a Member
                     </h3>
                     <p className="text-sm text-[#6B7280]">
-                      Log in to use your saved profile and confirm ✨
+                      Log in to use your saved profile and confirm
                     </p>
                   </div>
                   <ArrowRight
@@ -811,10 +812,10 @@ export default function BookPage() {
               {/* Guest option */}
               <button
                 onClick={() => handleChoice(false)}
-                className="w-full bg-white rounded-2xl p-6 shadow-sm border-2 border-[#EDE5D8] hover:border-[#3B7DD8] hover:shadow-md transition-all text-left group"
+                className="w-full bg-white rounded-xl p-6 border-2 border-[#1A1A1A] shadow-[4px_4px_0_#1A1A1A] hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#3B7DD8] transition-[transform,box-shadow] text-left group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#EBF3FD] flex items-center justify-center text-[#3B7DD8] group-hover:bg-[#3B7DD8] group-hover:text-white transition-colors">
+                  <div className="w-12 h-12 rounded-lg border-2 border-[#1A1A1A] bg-[#EBF3FD] flex items-center justify-center text-[#3B7DD8] group-hover:bg-[#3B7DD8] group-hover:text-white transition-colors">
                     <svg
                       width="24"
                       height="24"
@@ -831,7 +832,7 @@ export default function BookPage() {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-[#1A1A1A] text-lg">
+                    <h3 className="font-display font-bold text-[#1A1A1A] text-xl">
                       Book as Guest
                     </h3>
                     <p className="text-sm text-[#6B7280]">
@@ -889,7 +890,7 @@ export default function BookPage() {
     <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
       <Navbar />
       <div className="flex-1 px-4 py-12">
-        <div className="max-w-2xl mx-auto animate-fadeIn">
+        <div className="max-w-2xl mx-auto dialog-rise">
           {/* Header */}
           <div className="text-center mb-8">
             <button
@@ -898,8 +899,8 @@ export default function BookPage() {
             >
               &larr; Go back
             </button>
-            <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">
-              {isMember ? "Quick Confirm ⚡" : "Fill Your Details 📝"}
+            <h1 className="font-display font-extrabold text-4xl sm:text-5xl leading-[0.95] tracking-tight text-[#1A1A1A] mb-3">
+              {isMember ? "Quick confirm" : "Your details"}
             </h1>
             <p className="text-[#6B7280]">
               {formatDate(event.event_date)} @ {event.venue_name}
@@ -907,7 +908,7 @@ export default function BookPage() {
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8] space-y-6">
+            <div className="bg-white rounded-xl p-6 sm:p-8 border-2 border-[#1A1A1A] shadow-[5px_5px_0_#1A1A1A] space-y-6">
               {/* Error display for guest booking */}
               {bookingError && (
                 <div className="p-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-sm text-center">
@@ -933,7 +934,7 @@ export default function BookPage() {
 
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-1.5">
                   Name <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
@@ -944,14 +945,14 @@ export default function BookPage() {
                   }
                   placeholder="Your full name"
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
                 />
               </div>
 
               {/* Email (always show for guest, show for member if no user) */}
               {(!isMember || !user) && (
                 <div>
-                  <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                  <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-1.5">
                     Email <span className="text-[#EF4444]">*</span>
                   </label>
                   <input
@@ -963,14 +964,14 @@ export default function BookPage() {
                     placeholder="you@example.com"
                     required
                     disabled={isMember && !!user}
-                    className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8] disabled:bg-[#F3F4F6] disabled:text-[#9CA3AF]"
+                    className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8] disabled:bg-[#F3F4F6] disabled:text-[#9CA3AF]"
                   />
                 </div>
               )}
 
               {/* Phone */}
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-1.5">
                   Phone Number <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
@@ -981,13 +982,13 @@ export default function BookPage() {
                   }
                   placeholder="08xxxxxxxxxx"
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
                 />
               </div>
 
               {/* Age Range */}
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-1.5">
                   Age Range <span className="text-[#EF4444]">*</span>
                 </label>
                 <select
@@ -996,7 +997,7 @@ export default function BookPage() {
                     setFormData({ ...formData, age_range: e.target.value })
                   }
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
                 >
                   <option value="">Select your age range</option>
                   {AGE_RANGES.map((range) => (
@@ -1007,7 +1008,7 @@ export default function BookPage() {
 
               {/* MBTI */}
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-1.5">
                   MBTI Personality Type <span className="text-[#EF4444]">*</span>
                 </label>
                 <select
@@ -1016,7 +1017,7 @@ export default function BookPage() {
                     setFormData({ ...formData, mbti: e.target.value })
                   }
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
                 >
                   <option value="">Select your MBTI</option>
                   {MBTI_OPTIONS.map((type) => (
@@ -1027,7 +1028,7 @@ export default function BookPage() {
 
               {/* Occupation */}
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-1.5">
                   What do you do? <span className="text-[#EF4444]">*</span>
                 </label>
                 <select
@@ -1036,7 +1037,7 @@ export default function BookPage() {
                     setFormData({ ...formData, occupation: e.target.value })
                   }
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
                 >
                   {OCCUPATION_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -1048,7 +1049,7 @@ export default function BookPage() {
 
               {/* Domicile */}
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-1.5">
                   Where are you based? <span className="text-[#EF4444]">*</span>
                 </label>
                 <select
@@ -1057,7 +1058,7 @@ export default function BookPage() {
                     setFormData({ ...formData, domicile: e.target.value })
                   }
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] focus:border-[#3B7DD8]"
                 >
                   {DOMICILE_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
@@ -1069,7 +1070,7 @@ export default function BookPage() {
 
               {/* Instagram */}
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-1.5">
+                <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-1.5">
                   Instagram <span className="text-[#9CA3AF]">(optional)</span>
                 </label>
                 <input
@@ -1079,13 +1080,13 @@ export default function BookPage() {
                     setFormData({ ...formData, instagram: e.target.value })
                   }
                   placeholder="@yourusername"
-                  className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
                 />
               </div>
 
               {/* Interests */}
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-3">
+                <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-3">
                   Your Interests{" "}
                   <span className="text-[#9CA3AF]">
                     (optional, pick as many as you want)
@@ -1097,10 +1098,10 @@ export default function BookPage() {
                       key={interest}
                       type="button"
                       onClick={() => toggleInterest(interest)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium border-2 transition-colors ${
                         formData.interests.includes(interest)
-                          ? "bg-[#F47B20] text-white shadow-sm"
-                          : "bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"
+                          ? "bg-[#F47B20] text-[#1A1A1A] border-[#1A1A1A]"
+                          : "bg-white text-[#374151] border-[#1A1A1A]/15 hover:border-[#1A1A1A]"
                       }`}
                     >
                       {interest}
@@ -1111,7 +1112,7 @@ export default function BookPage() {
 
               {/* Expectations */}
               <div>
-                <label className="block text-sm font-medium text-[#374151] mb-3">
+                <label className="block font-mono text-[12px] uppercase tracking-[0.08em] text-[#374151] mb-3">
                   What are you looking for?{" "}
                   <span className="text-[#9CA3AF]">(optional)</span>
                 </label>
@@ -1144,19 +1145,19 @@ export default function BookPage() {
                       })
                     }
                     placeholder="Anything else? Type it here..."
-                    className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
+                    className="w-full px-4 py-3 rounded-lg border-2 border-[#1A1A1A]/20 bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
                   />
                 </div>
               </div>
             </div>
 
             {/* QRIS Section */}
-            <div className="mt-8 bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8]">
+            <div className="mt-8 bg-[#FFF3EB] rounded-xl p-6 sm:p-8 border-2 border-[#1A1A1A]">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-sm font-medium mb-4">
                   <span>This event is 100% FREE</span>
                 </div>
-                <h3 className="text-lg font-bold text-[#1A1A1A] mb-1">
+                <h3 className="font-display text-xl font-bold text-[#1A1A1A] mb-1">
                   Want to support us?
                 </h3>
                 <p className="text-sm text-[#6B7280]">
@@ -1171,13 +1172,12 @@ export default function BookPage() {
                   alt="QRIS English Club Jogja"
                   width={220}
                   height={220}
-                  className="rounded-2xl border border-[#E5E7EB]"
+                  className="rounded-lg border-2 border-[#1A1A1A]"
                 />
               </div>
 
               <p className="text-center text-xs text-[#9CA3AF] mt-4">
-                Every contribution helps us keep this community alive and running
-                ✨
+                Every contribution helps us keep this community alive and running.
               </p>
             </div>
 
@@ -1186,7 +1186,7 @@ export default function BookPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#F47B20] hover:bg-[#D96A15] disabled:bg-[#F47B20]/50 text-white font-bold rounded-2xl shadow-lg shadow-[#F47B20]/25 hover:shadow-xl transition-all text-lg"
+                className="w-full flex items-center justify-center gap-2 px-6 py-4 font-semibold text-lg bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] disabled:opacity-60 text-[#1A1A1A] border-2 border-[#1A1A1A] shadow-[0_3px_0_#1A1A1A] rounded-lg transition-colors"
               >
                 {submitting ? (
                   <Loader2 size={24} className="animate-spin" />
