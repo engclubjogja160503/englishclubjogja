@@ -3,12 +3,21 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Menu, X, LogOut } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, LogOut, ArrowUpRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { WHATSAPP_GROUP_URL } from "@/lib/constants";
+
+const MAIN_LINKS = [
+  { href: "/#this-saturday", label: "This Saturday" },
+  { href: "/saturdays", label: "Past Saturdays" },
+  { href: "/about", label: "About" },
+  { href: "/about#collaborate", label: "Collaborate" },
+];
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -28,6 +37,14 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Lock page scroll while the full-screen mobile menu is open.
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   const handleLogout = async () => {
     setLoggingOut(true);
     const supabase = createClient();
@@ -38,125 +55,135 @@ export default function Navbar() {
     router.push("/");
   };
 
-  const navItems = user
-    ? [
-        { href: "/", label: "Home" },
-        { href: "/profile", label: "Profile" },
-        { href: "/book", label: "Book Seat" },
-        { href: "/cancel", label: "Cancel Booking" },
-        { href: "/donate", label: "Donate" },
-      ]
-    : [
-        { href: "/", label: "Home" },
-        { href: "/login", label: "Sign In" },
-        { href: "/book", label: "Book Seat" },
-        { href: "/cancel", label: "Cancel Booking" },
-        { href: "/donate", label: "Donate" },
-      ];
+  const isActive = (href: string) =>
+    !href.includes("#") && (pathname === href || pathname.startsWith(href + "/"));
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#EDE5D8]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+    // No backdrop-filter here: it would become the containing block for the fixed mobile menu.
+    <nav className="sticky top-0 z-50 bg-[#F5F0E8] border-b-2 border-[#1A1A1A]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="flex items-center justify-between h-16 lg:h-[72px] gap-6">
+          <Link href="/" className="flex items-center shrink-0" aria-label="English Club Jogja, home">
             <Image
-              src="/images/logo.png"
+              src="/images/logo-wordmark.png"
               alt="English Club Jogja"
-              width={140}
-              height={40}
-              className="h-10 w-auto"
-              priority
+              width={648}
+              height={438}
+              className="h-11 lg:h-12 w-auto"
+              preload
             />
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <NavLink key={item.href} href={item.href}>
-                {item.label}
-              </NavLink>
-            ))}
-            {user && (
-              <button
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-[#DC2626] hover:bg-[#FEF2F2] transition-colors disabled:opacity-50"
+          <div className="hidden lg:flex items-center gap-7">
+            {MAIN_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`text-[15px] font-medium hover:text-[#D96A15] underline-offset-[6px] decoration-2 ${
+                  isActive(item.href) ? "text-[#1A1A1A] underline decoration-[#F47B20]" : "text-[#374151]"
+                }`}
               >
-                <LogOut size={16} />
-                Logout
-              </button>
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="hidden lg:flex items-center gap-4">
+            {user ? (
+              <>
+                <Link href="/profile" className="text-sm font-medium text-[#374151] hover:text-[#D96A15]">
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="flex items-center gap-1.5 text-sm font-medium text-[#6B7280] hover:text-[#DC2626] disabled:opacity-50"
+                >
+                  <LogOut size={15} />
+                  {loggingOut ? "Logging out…" : "Logout"}
+                </button>
+              </>
+            ) : (
+              <Link href="/login" className="text-sm font-medium text-[#374151] hover:text-[#D96A15]">
+                Sign in
+              </Link>
             )}
+            <Link
+              href="/book"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold text-[15px] rounded-md transition-colors"
+            >
+              Save a seat
+            </Link>
           </div>
 
           {/* Mobile toggle */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-[#FFF3EB] text-[#1A1A1A]"
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
-
-        {/* Mobile menu */}
-        {mobileOpen && (
-          <div className="md:hidden pb-4 animate-fadeIn">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.href}
-                href={item.href}
-                mobile
-                onClick={() => setMobileOpen(false)}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-            {user && (
-              <button
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[#DC2626] hover:bg-[#FEF2F2] transition-colors disabled:opacity-50"
-              >
-                <LogOut size={16} />
-                {loggingOut ? "Logging out..." : "Logout"}
-              </button>
-            )}
+          <div className="flex lg:hidden items-center gap-2">
+            <Link
+              href="/book"
+              className="px-3.5 py-2 bg-[#F47B20] text-[#1A1A1A] font-semibold text-sm rounded-md"
+            >
+              Save a seat
+            </Link>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 -mr-2 text-[#1A1A1A]"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+            >
+              {mobileOpen ? <X size={26} /> : <Menu size={26} />}
+            </button>
           </div>
-        )}
+        </div>
       </div>
-    </nav>
-  );
-}
 
-function NavLink({
-  href,
-  children,
-  mobile,
-  onClick,
-}: {
-  href: string;
-  children: React.ReactNode;
-  mobile?: boolean;
-  onClick?: () => void;
-}) {
-  if (mobile) {
-    return (
-      <Link
-        href={href}
-        onClick={onClick}
-        className="block px-4 py-2 rounded-lg text-sm font-medium text-[#374151] hover:bg-[#FFF3EB] hover:text-[#F47B20]"
-      >
-        {children}
-      </Link>
-    );
-  }
-  return (
-    <Link
-      href={href}
-      className="px-4 py-2 rounded-lg text-sm font-medium text-[#374151] hover:bg-[#FFF3EB] hover:text-[#F47B20]"
-    >
-      {children}
-    </Link>
+      {/* Mobile menu: full screen, big type */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 bg-[#1A1A1A] text-[#F5F0E8] overflow-y-auto animate-fadeIn">
+          <div className="px-6 pt-8 pb-12 flex flex-col gap-10 min-h-full">
+            <ul className="flex flex-col gap-1">
+              {[{ href: "/", label: "Home" }, ...MAIN_LINKS].map((item, i) => (
+                <li key={item.href} className="word-rise">
+                  <Link
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    style={{ animationDelay: `${i * 50}ms` }}
+                    className="font-display font-bold text-[40px] leading-[1.15] tracking-tight hover:text-[#F47B20]"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[15px] border-t border-white/15 pt-6">
+              <Link href="/book" onClick={() => setMobileOpen(false)} className="text-[#F47B20] font-semibold">Save a seat</Link>
+              <Link href="/cancel" onClick={() => setMobileOpen(false)} className="text-[#F5F0E8]/80">Cancel a booking</Link>
+              <Link href="/donate" onClick={() => setMobileOpen(false)} className="text-[#F5F0E8]/80">Donate</Link>
+              <a href={WHATSAPP_GROUP_URL} target="_blank" rel="noopener noreferrer" className="text-[#F5F0E8]/80 inline-flex items-center gap-1">
+                WhatsApp group <ArrowUpRight size={14} />
+              </a>
+              {user ? (
+                <>
+                  <Link href="/profile" onClick={() => setMobileOpen(false)} className="text-[#F5F0E8]/80">Profile</Link>
+                  <button
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                    className="text-left text-[#F5F0E8]/80 inline-flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    <LogOut size={15} />
+                    {loggingOut ? "Logging out…" : "Logout"}
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" onClick={() => setMobileOpen(false)} className="text-[#F5F0E8]/80">Sign in</Link>
+              )}
+            </div>
+
+            <p className="eyebrow text-[#F5F0E8]/50 mt-auto">No grades · No pressure · Just conversations</p>
+          </div>
+        </div>
+      )}
+    </nav>
   );
 }

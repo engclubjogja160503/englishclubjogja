@@ -14,6 +14,7 @@ import {
   LogIn,
   Search,
 } from "lucide-react";
+import { isUpcoming } from "@/lib/events";
 
 interface Booking {
   id: string;
@@ -81,7 +82,7 @@ function CancelPageContent() {
         .order("event_date", { ascending: true })
         .limit(5);
 
-      const visible = (events || []).filter((e) => !e.is_archived);
+      const visible = (events || []).filter((e) => !e.is_archived && isUpcoming(e));
       if (visible.length === 0) {
         setLoading(false);
         return;
@@ -125,13 +126,17 @@ function CancelPageContent() {
       lookupType === "email" ? "guest_email" : "guest_phone";
     const value = lookupValue.trim();
 
-    const { data, error: queryError } = await supabase
+    const base = supabase
       .from("bookings")
       .select("id, guest_name, guest_email, guest_phone")
       .eq("event_id", eventId)
       .eq("status", "confirmed")
-      .is("user_id", null)
-      .eq(field, value);
+      .is("user_id", null);
+    // Emails are matched case-insensitively, the same way cancel_guest_booking checks them.
+    const { data, error: queryError } =
+      field === "guest_email"
+        ? await base.ilike(field, value.replace(/[%_\\]/g, "\\$&"))
+        : await base.eq(field, value);
 
     if (queryError) {
       setLookupError("Something went wrong. Please try again.");
@@ -201,6 +206,14 @@ function CancelPageContent() {
       return;
     }
 
+    // The page stays mounted after router.push, so clear the cancelled booking from state.
+    setBookings((prev) => prev.filter((b) => b.id !== selectedBooking));
+    setSelectedBooking("");
+    setReason("");
+    setVerification("");
+    setLookupValue("");
+    setLookupDone(false);
+    setShowConfirmModal(false);
     setCancelling(false);
     sessionStorage.setItem("bookingCancelled", "true");
     router.push("/cancel?cancelled=true");
@@ -218,11 +231,11 @@ function CancelPageContent() {
       <div className="flex-1 px-4 py-12">
         <div className="max-w-2xl mx-auto animate-fadeIn">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-[#1A1A1A] mb-3">
-              Cancel Booking 😢
+            <h1 className="font-display font-extrabold text-5xl leading-none text-[#1A1A1A] mb-4">
+              Cancel a booking
             </h1>
             <p className="text-[#6B7280]">
-              We&apos;ll miss you! Pick your name below to cancel your booking.
+              We&apos;ll miss you! Cancelling frees your seat for someone else.
             </p>
           </div>
 
@@ -321,7 +334,19 @@ function CancelPageContent() {
                 </div>
               </div>
             ) : (
-              <form onSubmit={(e) => { e.preventDefault(); setShowConfirmModal(true); }} className="space-y-6">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  // Enter in the guest lookup field should search, not open the cancel dialog.
+                  if (mode === "guest" && !lookupDone) {
+                    handleLookup(e);
+                    return;
+                  }
+                  if (!selectedBooking) return;
+                  setShowConfirmModal(true);
+                }}
+                className="space-y-6"
+              >
                 {error && (
                   <div className="p-4 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-sm">
                     {error}

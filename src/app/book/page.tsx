@@ -16,8 +16,22 @@ import {
   AGE_RANGES,
   MBTI_OPTIONS,
 } from "@/lib/constants";
+import { isUpcoming } from "@/lib/events";
 
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_WEBHOOK_URL;
+
+/** Fire-and-forget sync so a slow Apps Script never holds up the success screen. */
+function syncToSheets(payload: Record<string, unknown>) {
+  if (!GOOGLE_SHEETS_WEBHOOK_URL) return;
+  fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload),
+    keepalive: true,
+  }).catch((sheetsError) => {
+    console.error("Google Sheets sync error:", sheetsError);
+  });
+}
 
 interface EventData {
   id: string;
@@ -102,15 +116,15 @@ export default function BookPage() {
         }
       }
 
-      // Fetch active event (skip archived ones)
+      // Fetch the next active event (skip archived ones and dates that have passed)
       const { data: events } = await supabase
         .from("events")
         .select("*")
         .eq("is_active", true)
         .order("event_date", { ascending: true })
-        .limit(5);
+        .limit(10);
 
-      const visible = (events || []).filter((e) => !e.is_archived);
+      const visible = (events || []).filter((e) => !e.is_archived && isUpcoming(e));
       if (visible.length > 0) {
         const activeEvent = visible[0];
         setEvent(activeEvent);
@@ -247,6 +261,23 @@ export default function BookPage() {
       return;
     }
 
+    // One seat per member: if they already have one, just show it again.
+    const { data: existingBooking } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("event_id", event.id)
+      .eq("user_id", member.id)
+      .eq("status", "confirmed")
+      .limit(1)
+      .maybeSingle();
+
+    if (existingBooking) {
+      setBookingId(existingBooking.id);
+      setStep("success");
+      setSubmitting(false);
+      return;
+    }
+
     const { data: cancelledBooking } = await supabase
       .from("bookings")
       .select("id")
@@ -280,31 +311,23 @@ export default function BookPage() {
       return;
     }
 
-    if (booking?.id && GOOGLE_SHEETS_WEBHOOK_URL) {
-      try {
-        await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            bookingId: booking.id,
-            eventDate: event.event_date,
-            name: formData.full_name,
-            email: formData.email,
-            phone: formData.phone,
-            username: "",
-            occupation: formData.occupation,
-            domicile: formData.domicile,
-            instagram: formData.instagram,
-            isMember: true,
-            status: "confirmed",
-            bookingDate: new Date().toISOString(),
-            age: formData.age_range,
-            mbti: formData.mbti,
-          }),
-        });
-      } catch (sheetsError) {
-        console.error("Google Sheets sync error:", sheetsError);
-      }
+    if (booking?.id) {
+      syncToSheets({
+        bookingId: booking.id,
+        eventDate: event.event_date,
+        name: formData.full_name,
+        email: formData.email,
+        phone: formData.phone,
+        username: "",
+        occupation: formData.occupation,
+        domicile: formData.domicile,
+        instagram: formData.instagram,
+        isMember: true,
+        status: "confirmed",
+        bookingDate: new Date().toISOString(),
+        age: formData.age_range,
+        mbti: formData.mbti,
+      });
     }
 
     setBookingId(booking?.id || "");
@@ -382,6 +405,26 @@ export default function BookPage() {
       setBookingError("Sorry, this event is now fully booked.");
       setSubmitting(false);
       return;
+    }
+
+    // One seat per guest email per event.
+    if (!(isMember && user) && formData.email.trim()) {
+      const { data: existingGuest } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("event_id", event.id)
+        .eq("status", "confirmed")
+        .is("user_id", null)
+        .ilike("guest_email", formData.email.trim().replace(/[%_\\]/g, "\\$&"))
+        .limit(1)
+        .maybeSingle();
+      if (existingGuest) {
+        setBookingError(
+          "This email already has a seat for this Saturday. See you there! If you need to cancel, use the Cancel a booking page."
+        );
+        setSubmitting(false);
+        return;
+      }
     }
 
     // If member, update profile
@@ -467,31 +510,23 @@ export default function BookPage() {
       return;
     }
 
-    if (booking?.id && GOOGLE_SHEETS_WEBHOOK_URL) {
-      try {
-        await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            bookingId: booking.id,
-            eventDate: event.event_date,
-            name: formData.full_name,
-            email: formData.email,
-            phone: formData.phone,
-            username: "",
-            occupation: formData.occupation,
-            domicile: formData.domicile,
-            instagram: formData.instagram,
-            isMember,
-            status: "confirmed",
-            bookingDate: new Date().toISOString(),
-            age: formData.age_range,
-            mbti: formData.mbti,
-          }),
-        });
-      } catch (sheetsError) {
-        console.error("Google Sheets sync error:", sheetsError);
-      }
+    if (booking?.id) {
+      syncToSheets({
+        bookingId: booking.id,
+        eventDate: event.event_date,
+        name: formData.full_name,
+        email: formData.email,
+        phone: formData.phone,
+        username: "",
+        occupation: formData.occupation,
+        domicile: formData.domicile,
+        instagram: formData.instagram,
+        isMember,
+        status: "confirmed",
+        bookingDate: new Date().toISOString(),
+        age: formData.age_range,
+        mbti: formData.mbti,
+      });
     }
 
     setBookingId(booking?.id || "");

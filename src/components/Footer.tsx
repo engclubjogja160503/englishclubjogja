@@ -1,57 +1,82 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+import { WHATSAPP_GROUP_URL } from "@/lib/constants";
+
+const COLUMNS = [
+  {
+    heading: "The club",
+    links: [
+      { href: "/#this-saturday", label: "This Saturday" },
+      { href: "/saturdays", label: "Past Saturdays" },
+      { href: "/about", label: "About us" },
+      { href: "/about#collaborate", label: "Collaborate" },
+    ],
+  },
+  {
+    heading: "Your seat",
+    links: [
+      { href: "/book", label: "Save a seat" },
+      { href: "/cancel", label: "Cancel a booking" },
+      { href: "/login", label: "Member sign in" },
+      { href: "/register", label: "Become a member" },
+    ],
+  },
+  {
+    heading: "Keep in touch",
+    links: [
+      { href: WHATSAPP_GROUP_URL, label: "WhatsApp group", external: true },
+      { href: "https://instagram.com/engclubjogja", label: "Instagram @engclubjogja", external: true },
+      { href: "/donate", label: "Support us (QRIS)" },
+    ],
+  },
+];
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-[#EDE5D8] mt-auto">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <Image
-              src="/images/logo.png"
-              alt="English Club Jogja"
-              width={120}
-              height={35}
-              className="h-8 w-auto"
-            />
-          </div>
+    <footer className="mt-auto bg-[#1A1A1A] text-[#F5F0E8]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-16 pb-10">
+        <p className="font-display font-extrabold text-[clamp(2.4rem,7vw,5.5rem)] leading-[0.95] tracking-tight max-w-4xl">
+          No grades. No pressure.{" "}
+          <span className="text-[#F47B20]">Just conversations.</span>
+        </p>
 
-          {/* Tagline */}
-          <p className="text-sm text-[#374151] font-medium text-center">
-            No grades, no pressure, just conversation. 🗣️
-          </p>
-
-          {/* Social */}
-          <div className="flex items-center gap-4">
-            <a
-              href="https://instagram.com/engclubjogja"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-[#6B7280] hover:text-[#E1306C] transition-colors text-sm"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-4 h-4"
-              >
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-              </svg>
-              @engclubjogja
-            </a>
+        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-10 border-t border-white/15 pt-10">
+          {COLUMNS.map((col) => (
+            <div key={col.heading} className="flex flex-col gap-3">
+              <p className="eyebrow text-[#F5F0E8]/50">{col.heading}</p>
+              <ul className="flex flex-col gap-2.5">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    {"external" in l && l.external ? (
+                      <a
+                        href={l.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[15px] text-[#F5F0E8]/85 hover:text-[#F47B20]"
+                      >
+                        {l.label} <ArrowUpRight size={14} />
+                      </a>
+                    ) : (
+                      <Link href={l.href} className="text-[15px] text-[#F5F0E8]/85 hover:text-[#F47B20]">
+                        {l.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <div className="col-span-2 md:col-span-1 flex flex-col gap-3">
+            <p className="eyebrow text-[#F5F0E8]/50">When</p>
+            <p className="text-[15px] text-[#F5F0E8]/85 leading-relaxed">
+              Every Saturday night in Yogyakarta. Free, always. The topic and venue drop in the WhatsApp group during the week.
+            </p>
           </div>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-[#EDE5D8] text-center">
-          <p className="text-xs text-[#9CA3AF]">
-            &copy; {new Date().getFullYear()} English Club Jogja. Made with
-            &hearts; in Yogyakarta.
-          </p>
+        <div className="mt-14 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#F5F0E8]/45 eyebrow">
+          <span>© {new Date().getFullYear()} English Club Jogja</span>
+          <span>Made in Yogyakarta, by the people who show up</span>
         </div>
       </div>
     </footer>

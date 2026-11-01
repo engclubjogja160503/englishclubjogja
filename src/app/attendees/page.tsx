@@ -20,10 +20,10 @@ interface EventInfo {
 const AVATAR_BG = [
   "bg-[#F47B20]",
   "bg-[#3B7DD8]",
-  "bg-[#22C55E]",
-  "bg-[#8B5CF6]",
-  "bg-[#EC4899]",
-  "bg-[#14B8A6]",
+  "bg-[#1A1A1A]",
+  "bg-[#D96A15]",
+  "bg-[#2D5FA8]",
+  "bg-[#6B7280]",
 ];
 
 function initialsOf(name: string) {
@@ -118,12 +118,12 @@ function AttendeesContent() {
           ) : (
             <>
               <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-sm font-medium mb-4">
-                  <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+                <div className="eyebrow inline-flex items-center gap-2 text-[#B4570F] mb-4">
+                  <span className="w-2 h-2 rounded-full bg-[#F47B20] animate-pulse" />
                   {attendees.length} confirmed going
                 </div>
-                <h1 className="text-3xl font-bold text-[#1A1A1A] mb-3">
-                  Who&apos;s Going 🎉
+                <h1 className="font-display font-extrabold text-5xl leading-none text-[#1A1A1A] mb-4">
+                  Who&apos;s going
                 </h1>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-[#6B7280]">
                   <span className="inline-flex items-center gap-1.5 text-sm">
@@ -132,7 +132,7 @@ function AttendeesContent() {
                   </span>
                   <span className="hidden sm:inline text-[#D1D5DB]">•</span>
                   <span className="inline-flex items-center gap-1.5 text-sm">
-                    <MapPin size={16} className="text-[#EF4444]" />
+                    <MapPin size={16} className="text-[#F47B20]" />
                     {event.venue_name}
                   </span>
                 </div>
@@ -145,13 +145,13 @@ function AttendeesContent() {
                   </p>
                   <Link
                     href="/book"
-                    className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-xl transition-all"
+                    className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md transition-colors"
                   >
-                    🪑 Book Your Seat
+                    Save your seat
                   </Link>
                 </div>
               ) : (
-                <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-lg border border-[#EDE5D8]">
+                <div className="bg-white rounded-md p-4 sm:p-6 border-2 border-[#1A1A1A]">
                   <div className="divide-y divide-[#F3F4F6]">
                     {attendees.map((a, i) => {
                       const name = attendeeName(a, i);
@@ -183,8 +183,8 @@ function AttendeesContent() {
                           <span
                             className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${
                               isMember
-                                ? "bg-[#EBF3FD] text-[#3B7DD8]"
-                                : "bg-[#FFF3EB] text-[#F47B20]"
+                                ? "bg-[#EBF3FD] text-[#2D5FA8]"
+                                : "bg-[#FFF3EB] text-[#B4570F]"
                             }`}
                           >
                             {isMember ? "Member" : "Guest"}
@@ -199,9 +199,9 @@ function AttendeesContent() {
               <div className="mt-6 text-center">
                 <Link
                   href="/book"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-2xl shadow-lg shadow-[#F47B20]/25 transition-all text-lg"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md transition-colors text-lg"
                 >
-                  🪑 Join them — Book Your Seat
+                  Join them. Save your seat
                 </Link>
               </div>
             </>

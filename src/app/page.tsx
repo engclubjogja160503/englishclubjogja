@@ -1,488 +1,357 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, ArrowDown, ArrowUpRight, Plus } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import GoingPill, { type GoingAttendee } from "@/components/GoingPill";
+import Reveal from "@/components/Reveal";
+import PastSaturdays from "@/components/PastSaturdays";
+import ThisSaturday from "@/components/home/ThisSaturday";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
-import {
-  Calendar,
-  MapPin,
-  Users,
-  Clock,
-  ArrowRight,
-  Coffee,
-  ClipboardEdit,
-  PartyPopper,
-  Handshake,
-} from "lucide-react";
+import groupHearts from "@/assets/photos/group-hearts.jpg";
+import groupPeace from "@/assets/photos/group-peace.jpg";
+import groupRelaxed from "@/assets/photos/group-relaxed.jpg";
+import micCircle from "@/assets/photos/mic-circle.jpg";
+import rooftopSession from "@/assets/photos/rooftop-session.jpg";
 
-interface EventData {
-  id: string;
-  event_date: string;
-  event_time: string | null;
-  venue_name: string;
-  venue_address: string;
-  max_participants: number;
-  description: string;
-  is_archived?: boolean | null;
-}
+const HEADLINE = ["No", "grades.", "No", "pressure.", "Just", "conversations."];
 
-function formatTime(timeStr: string | null) {
-  if (!timeStr) return "7:00 PM WIB";
-  const [h, m] = timeStr.split(":");
-  const hour = parseInt(h, 10);
-  if (Number.isNaN(hour)) return timeStr;
-  const ampm = hour >= 12 ? "PM" : "AM";
-  const h12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${h12}:${m ?? "00"} ${ampm} WIB`;
-}
+const STEPS = [
+  {
+    title: "Show up as you are",
+    text: "Grab a seat and a drink. Plenty of people come alone the first time. Nobody checks your grammar at the door.",
+  },
+  {
+    title: "Break the ice",
+    text: "A quick warm-up game so everyone has spoken at least once before the real conversation starts.",
+  },
+  {
+    title: "Talk in small groups",
+    text: "We split into small tables around the week's topic. Small groups mean you actually get to talk, not just listen.",
+  },
+  {
+    title: "Share with the room",
+    text: "Groups pass the mic and share the best ideas, the hot takes, and whatever made their table laugh.",
+  },
+  {
+    title: "Stay for the group photo",
+    text: "And usually for a while after. This is the part where strangers turn into friends.",
+  },
+];
+
+const FAQ = [
+  {
+    q: "My English isn't very good. Can I still come?",
+    a: "Yes. That's exactly why we exist. Beginners and fluent speakers sit at the same tables, and nobody is graded or corrected in front of everyone. Mistakes are part of the deal.",
+  },
+  {
+    q: "Is it really free?",
+    a: "100% free, every week. No tickets, no membership fee. If you want to help keep it running, there's a voluntary QRIS donation, but it's never expected.",
+  },
+  {
+    q: "Do I need to create an account?",
+    a: "No. You can book as a guest in under a minute. Members just get one-tap booking next time.",
+  },
+  {
+    q: "I'm coming alone. Is that weird?",
+    a: "Not at all. Lots of people come alone, and the small-group format means you'll be talking to new people within minutes.",
+  },
+  {
+    q: "What if I book and can't make it?",
+    a: "Please cancel so someone else can take your seat. Seats are limited every week.",
+    link: { href: "/cancel", label: "Cancel a booking" },
+  },
+  {
+    q: "Where do I hear about the next topic?",
+    a: "The topic and venue are posted here and in our WhatsApp group during the week.",
+    link: { href: WHATSAPP_GROUP_URL, label: "Join the WhatsApp group", external: true },
+  },
+];
 
 export default function HomePage() {
-  const [events, setEvents] = useState<EventData[]>([]);
-  const [bookingCounts, setBookingCounts] = useState<Record<string, number>>({});
-  const [attendeesMap, setAttendeesMap] = useState<Record<string, GoingAttendee[]>>({});
-  const [loading, setLoading] = useState(true);
-
-  const anySpotAvailable = events.some((evt) => {
-    const count = bookingCounts[evt.id] || 0;
-    return count < evt.max_participants;
-  });
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    async function fetchEvents() {
-      const { data: evts } = await supabase
-        .from("events")
-        .select("*")
-        .eq("is_active", true)
-        .order("event_date", { ascending: true });
-
-      // Client-side archive filter (works even before the
-      // is_archived column migration is applied in Supabase).
-      const visible = (evts || []).filter((e) => !e.is_archived);
-
-      if (visible.length > 0) {
-        setEvents(visible);
-
-        const counts: Record<string, number> = {};
-        const attendees: Record<string, GoingAttendee[]> = {};
-        await Promise.all(
-          visible.map(async (evt) => {
-            const { count } = await supabase
-              .from("bookings")
-              .select("*", { count: "exact", head: true })
-              .eq("event_id", evt.id)
-              .eq("status", "confirmed");
-            counts[evt.id] = count || 0;
-
-            const { data: sample } = await supabase
-              .from("bookings")
-              .select("id, guest_name, profiles(full_name, username, avatar_url)")
-              .eq("event_id", evt.id)
-              .eq("status", "confirmed")
-              .order("created_at", { ascending: true })
-              .limit(6);
-            if (sample) {
-              attendees[evt.id] = sample as unknown as GoingAttendee[];
-            }
-          })
-        );
-        setBookingCounts(counts);
-        setAttendeesMap(attendees);
-      }
-      setLoading(false);
-    }
-
-    fetchEvents();
-
-    // Realtime subscription — refetch counts + attendee preview on any booking change
-    const channel = supabase
-      .channel("bookings-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "bookings" },
-        async () => {
-          const { data: evts } = await supabase
-            .from("events")
-            .select("id")
-            .eq("is_active", true);
-          if (evts) {
-            const counts: Record<string, number> = {};
-            const attendees: Record<string, GoingAttendee[]> = {};
-            await Promise.all(
-              evts.map(async (evt) => {
-                const { count } = await supabase
-                  .from("bookings")
-                  .select("*", { count: "exact", head: true })
-                  .eq("event_id", evt.id)
-                  .eq("status", "confirmed");
-                counts[evt.id] = count || 0;
-
-                const { data: sample } = await supabase
-                  .from("bookings")
-                  .select("id, guest_name, profiles(full_name, username, avatar_url)")
-                  .eq("event_id", evt.id)
-                  .eq("status", "confirmed")
-                  .order("created_at", { ascending: true })
-                  .limit(6);
-                if (sample) {
-                  attendees[evt.id] = sample as unknown as GoingAttendee[];
-                }
-              })
-            );
-            setBookingCounts(counts);
-            setAttendeesMap(attendees);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + "T19:00:00");
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      {/* Hero Section */}
       <main className="flex-1">
-        <section className="relative overflow-hidden">
-          {/* Background decorations */}
-          <div className="absolute top-20 left-10 w-72 h-72 bg-[#F47B20]/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#3B7DD8]/5 rounded-full blur-3xl" />
-          {/* Subtle dot pattern texture */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #1A1A1A 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+        {/* ── Hero: the group photo, three takes, like a self-timer burst ── */}
+        <section className="relative bg-[#1A1A1A] text-[#F5F0E8] overflow-hidden">
+          {/* Headline sits in the ink band; the photo's night sky continues it below. */}
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-10 pb-2 lg:pt-14 lg:-mb-[6vw]">
+            <p className="eyebrow text-[#F5F0E8]/70 word-rise">
+              <span>English Club Jogja · Every Saturday night · Yogyakarta</span>
+            </p>
+            <h1 className="word-rise font-display font-extrabold text-[clamp(2.7rem,6.6vw,6.6rem)] leading-[0.9] tracking-[-0.035em] mt-5 max-w-[14ch] lg:max-w-[16ch]">
+              {HEADLINE.map((w, i) => (
+                <span
+                  key={i}
+                  className={`${i === 5 ? "text-[#F47B20]" : ""} mr-[0.22em]`}
+                  style={{ animationDelay: `${120 + i * 90}ms` }}
+                >
+                  {w}
+                </span>
+              ))}
+            </h1>
+          </div>
 
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-20">
-            <div className="text-center animate-fadeIn">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#EBF3FD] border border-[#3B7DD8]/20 text-[#3B7DD8] text-sm font-medium mb-8">
-                <span className="animate-bounce inline-block text-base">👋</span>
-                <span>100% Free — No tickets needed</span>
-              </div>
+          <div className="relative w-full aspect-[3/2] sm:aspect-[16/10] lg:aspect-[16/9]">
+            <div className="burst absolute inset-0">
+              <Image
+                src={groupHearts}
+                alt="About forty English Club Jogja members on a rooftop at night, making heart signs with their hands"
+                fill
+                preload
+                placeholder="blur"
+                sizes="100vw"
+                className="object-cover object-[center_70%]"
+              />
+              <Image
+                src={groupPeace}
+                alt=""
+                fill
+                placeholder="blur"
+                sizes="100vw"
+                className="object-cover object-[center_70%]"
+              />
+              <Image
+                src={groupRelaxed}
+                alt=""
+                fill
+                placeholder="blur"
+                sizes="100vw"
+                className="object-cover object-[center_70%]"
+              />
+            </div>
+            <div className="shutter absolute inset-0 bg-white pointer-events-none" aria-hidden="true" />
+            {/* melt the photo's sky into the ink band above */}
+            <div className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-[#1A1A1A] to-transparent" aria-hidden="true" />
 
-              {/* Title */}
-              <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-[#1A1A1A] leading-tight mb-6">
-                English Club{" "}
-                <span className="text-[#F47B20]">Jogja</span>{" "}
-                <span className="inline-block animate-bounce text-3xl sm:text-4xl md:text-5xl align-middle" style={{ animationDelay: "0.2s" }}>🗣️</span>
-              </h1>
-
-              <p className="text-lg sm:text-xl text-[#374151] max-w-2xl mx-auto mb-3 leading-relaxed">
-                A place to practice English, meet new people, and build your confidence without pressure.
-              </p>
-              <p className="text-base sm:text-lg text-[#3B7DD8] font-semibold mb-10">
-                🗓️ We Meet Every Weekend
-              </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 mb-16">
-                {!loading && !anySpotAvailable ? (
-                  <div className="inline-flex items-center gap-2 px-8 py-4 bg-[#F3F4F6] text-[#6B7280] font-semibold rounded-2xl text-lg cursor-not-allowed">
-                    <span className="text-base">🪑</span> Fully Booked — See you next week!
-                  </div>
-                ) : (
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1A1A1A]/85 to-transparent pt-16">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pb-5 lg:pb-8 flex flex-wrap items-end justify-between gap-4">
+                <div className="hidden sm:flex flex-wrap gap-3">
                   <Link
                     href="/book"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-2xl shadow-lg shadow-[#F47B20]/25 hover:shadow-xl hover:shadow-[#F47B20]/30 transform hover:-translate-y-0.5 transition-all text-lg animate-pulse-glow"
+                    className="group inline-flex items-center gap-2 px-6 py-3.5 bg-[#F47B20] hover:bg-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md text-[17px] transition-colors"
                   >
-                    <span className="text-base">🪑</span> Book Your Seat
-                    <ArrowRight size={20} />
+                    Save a seat for Saturday
+                    <ArrowRight size={19} className="transition-transform group-hover:translate-x-1" />
                   </Link>
-                )}
-                <Link
-                  href="/cancel"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-white hover:bg-[#F3F4F6] text-[#374151] font-semibold rounded-2xl border border-[#E5E7EB] transition-all text-lg"
-                >
-                  Cancel Booking
-                </Link>
-                <a
-                  href={WHATSAPP_GROUP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-[#25D366] hover:bg-[#1DA851] text-white font-semibold rounded-2xl shadow-lg shadow-[#25D366]/25 hover:shadow-xl transform hover:-translate-y-0.5 transition-all text-lg"
-                >
-                  <span className="text-base">💬</span> Join Our Group
-                </a>
-              </div>
-            </div>
-
-            {/* Event Cards */}
-            {loading ? (
-              <div className="max-w-2xl mx-auto">
-                <div className="bg-white rounded-3xl p-8 shadow-lg border border-[#EDE5D8] animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded w-1/3 mb-4" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-                  <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  <a
+                    href="#how-it-goes"
+                    className="inline-flex items-center gap-2 px-5 py-3.5 border-2 border-[#F5F0E8]/70 hover:border-[#F5F0E8] text-[#F5F0E8] font-semibold rounded-md text-[17px]"
+                  >
+                    What happens on a Saturday <ArrowDown size={18} />
+                  </a>
                 </div>
-              </div>
-            ) : events.length > 0 ? (
-              <div className="max-w-2xl mx-auto space-y-6">
-                {events.map((evt, i) => {
-                  const count = bookingCounts[evt.id] || 0;
-                  const spotsLeft = evt.max_participants - count;
-                  const isFull = spotsLeft <= 0;
-                  const percentage = Math.min(
-                    (count / evt.max_participants) * 100,
-                    100
-                  );
-
-                  return (
-                    <div
-                      key={evt.id}
-                      className="animate-slideUp"
-                      style={{ animationDelay: `${i * 0.1}s` }}
-                    >
-                      <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-[#EDE5D8] hover:shadow-xl transition-shadow">
-                        {/* Event Header */}
-                        <div className="flex items-center gap-2 text-[#3B7DD8] text-sm font-semibold mb-4">
-                          <Coffee size={18} />
-                          <span>
-                            {i === 0 ? "NEXT MEETUP" : "UPCOMING EVENT"}
-                          </span>
-                          <span className="animate-pulse text-sm">✨</span>
-                        </div>
-
-                        <h2 className="text-2xl sm:text-3xl font-bold text-[#1A1A1A] mb-2">
-                          Saturday Night English Practice
-                        </h2>
-
-                        <p className="text-[#6B7280] mb-6">
-                          {evt.description}
-                        </p>
-
-                        {/* Event Details */}
-                        <div className="space-y-3 mb-8">
-                          <div className="flex items-center gap-3 text-[#374151]">
-                            <Calendar
-                              size={20}
-                              className="text-[#3B7DD8] shrink-0"
-                            />
-                            <span className="font-medium">
-                              {formatDate(evt.event_date)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 text-[#374151]">
-                            <Clock
-                              size={20}
-                              className="text-[#F47B20] shrink-0"
-                            />
-                            <span className="font-medium">
-                              {formatTime(evt.event_time)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 text-[#374151]">
-                            <MapPin
-                              size={20}
-                              className="text-[#EF4444] shrink-0"
-                            />
-                            <span className="font-medium">
-                              {evt.venue_name}
-                              {evt.venue_address &&
-                                ` — ${evt.venue_address}`}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="mb-4">
-                          <div className="flex items-center justify-between text-sm mb-2">
-                            <div className="flex items-center gap-2 text-[#374151]">
-                              <Users
-                                size={16}
-                                className="text-[#3B7DD8]"
-                              />
-                              <span className="font-semibold">
-                                {count} of {evt.max_participants} seats have
-                                been booked
-                              </span>
-                            </div>
-                            <span
-                              className={`font-bold ${
-                                isFull
-                                  ? "text-[#EF4444]"
-                                  : spotsLeft <= 5
-                                  ? "text-[#F59E0B]"
-                                  : "text-[#22C55E]"
-                              }`}
-                            >
-                              {isFull
-                                ? "FULLY BOOKED"
-                                : `${spotsLeft} spots left`}
-                            </span>
-                          </div>
-                          <div className="w-full h-3 bg-[#F3F4F6] rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-1000 ease-out"
-                              style={{
-                                width: `${percentage}%`,
-                                backgroundColor: isFull
-                                  ? "#EF4444"
-                                  : spotsLeft <= 5
-                                  ? "#F59E0B"
-                                  : "#22C55E",
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Going pill — who's confirmed, links to full list */}
-                        {(bookingCounts[evt.id] || 0) > 0 && (
-                          <div className="mb-4 flex justify-start">
-                            <GoingPill
-                              attendees={attendeesMap[evt.id] || []}
-                              eventId={evt.id}
-                              totalCount={count}
-                            />
-                          </div>
-                        )}
-
-                        {/* CTA */}
-                        {!isFull ? (
-                          <Link
-                            href="/book"
-                            className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#F47B20] hover:bg-[#D96A15] text-white font-semibold rounded-2xl shadow-lg shadow-[#F47B20]/25 hover:shadow-xl transition-all text-lg"
-                          >
-                            <span className="text-base">💺</span> Claim
-                            Your Spot Now
-                            <ArrowRight size={20} />
-                          </Link>
-                        ) : (
-                          <div className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#F3F4F6] text-[#6B7280] font-semibold rounded-2xl text-lg">
-                            <span>
-                              😅 Fully Booked — See you next week!
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="max-w-2xl mx-auto text-center py-12">
-                <p className="text-[#6B7280] text-lg">
-                  No upcoming events yet. Stay tuned!
+                <p className="eyebrow text-[#F5F0E8]/75 text-[11px] sm:text-xs">
+                  Three takes, one rooftop · Yogyakarta
                 </p>
               </div>
-            )}
-
-            {/* How It Works */}
-            <div className="mt-20 max-w-4xl mx-auto">
-              <h2 className="text-2xl sm:text-3xl font-bold text-center text-[#1A1A1A] mb-4">
-                How it works <span className="text-xl">✨</span>
-              </h2>
-              <p className="text-center text-[#6B7280] mb-12 text-sm">
-                No grades, no pressure, just conversation.
-              </p>
-              <div className="grid sm:grid-cols-3 gap-6">
-                <div className="animate-slideUp" style={{ animationDelay: "0.1s" }}>
-                  <StepCard
-                    number="01"
-                    icon={<ClipboardEdit size={20} />}
-                    title="Sign up or book as guest"
-                    desc="Create an account for faster booking next time, or just fill in your details real quick."
-                    color="orange"
-                  />
-                </div>
-                <div className="animate-slideUp" style={{ animationDelay: "0.2s" }}>
-                  <StepCard
-                    number="02"
-                    icon={<PartyPopper size={20} />}
-                    title="Show up & have fun"
-                    desc="Come to the venue on Saturday at 7 PM. Bring your good vibes and ready to speak English!"
-                    color="blue"
-                  />
-                </div>
-                <div className="animate-slideUp" style={{ animationDelay: "0.3s" }}>
-                  <StepCard
-                    number="03"
-                    icon={<Handshake size={20} />}
-                    title="Meet fellow English learners"
-                    desc="Network, make friends, practice English, maybe find your future partner? Who knows!"
-                    color="green"
-                  />
-                </div>
-              </div>
             </div>
+          </div>
+
+          {/* Mobile: actions under the photo, thumb-reachable */}
+          <div className="sm:hidden px-4 py-5 flex flex-col gap-3">
+            <Link
+              href="/book"
+              className="inline-flex items-center justify-between px-5 py-4 bg-[#F47B20] text-[#1A1A1A] font-semibold rounded-md text-lg"
+            >
+              Save a seat for Saturday <ArrowRight size={20} />
+            </Link>
+            <a href="#how-it-goes" className="text-center text-[#F5F0E8]/80 font-medium py-2">
+              What happens on a Saturday ↓
+            </a>
+          </div>
+        </section>
+
+        {/* ── Motto ticker ── */}
+        <div className="bg-[#F47B20] text-[#1A1A1A] overflow-hidden border-y-2 border-[#1A1A1A]" aria-hidden="true">
+          <div className="marquee-track flex w-max whitespace-nowrap py-3">
+            {[0, 1].map((k) => (
+              <span key={k} className="font-display font-extrabold text-xl sm:text-2xl tracking-tight pr-8">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <span key={i}>
+                    No grades <span className="text-[#F5F0E8] mx-3">✱</span> No pressure{" "}
+                    <span className="text-[#F5F0E8] mx-3">✱</span> Just conversations{" "}
+                    <span className="text-[#F5F0E8] mx-3">✱</span> Every Saturday{" "}
+                    <span className="text-[#F5F0E8] mx-3">✱</span>{" "}
+                  </span>
+                ))}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* ── This Saturday: the issue cover ── */}
+        <section id="this-saturday" className="scroll-mt-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-20 lg:py-28">
+            <ThisSaturday />
+          </div>
+        </section>
+
+        {/* ── How a Saturday goes ── */}
+        <section id="how-it-goes" className="scroll-mt-20 bg-white border-y-2 border-[#1A1A1A]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-20 lg:py-28">
+            <Reveal className="grid lg:grid-cols-12 gap-6 items-end mb-14">
+              <h2 className="lg:col-span-7 font-display font-extrabold text-[clamp(2.4rem,5.4vw,4.6rem)] leading-[0.92] text-[#1A1A1A]">
+                What a Saturday night actually looks like.
+              </h2>
+              <p className="lg:col-span-5 text-lg text-[#374151] leading-relaxed">
+                It isn&apos;t a class. There&apos;s no teacher at the front and no worksheet. It&apos;s closer to hanging out with friends who all happen to be speaking English.
+              </p>
+            </Reveal>
+
+            <div className="grid lg:grid-cols-12 gap-x-10 gap-y-12">
+              {/* photo collage */}
+              <div className="lg:col-span-7 grid grid-cols-6 gap-3 sm:gap-4 content-start">
+                <Reveal className="col-span-6 photo-zoom relative aspect-[16/9] overflow-hidden rounded-sm">
+                  <Image
+                    src={rooftopSession}
+                    alt="Members sitting at small tables on a rooftop café while organisers introduce the evening"
+                    fill
+                    placeholder="blur"
+                    sizes="(min-width: 1024px) 58vw, 100vw"
+                    className="object-cover"
+                  />
+                </Reveal>
+                <Reveal delay={100} className="col-span-4 photo-zoom relative aspect-[4/3] overflow-hidden rounded-sm">
+                  <Image
+                    src={micCircle}
+                    alt="A circle of members laughing while one of them holds the microphone"
+                    fill
+                    placeholder="blur"
+                    sizes="(min-width: 1024px) 38vw, 66vw"
+                    className="object-cover"
+                  />
+                </Reveal>
+                <Reveal delay={200} className="col-span-2 flex flex-col justify-end">
+                  <p className="font-display font-bold text-[clamp(1.1rem,2vw,1.6rem)] leading-tight text-[#2D5FA8] -rotate-2 origin-bottom-left">
+                    Everyone gets a turn with the mic.
+                  </p>
+                  <p className="eyebrow text-[#6B7280] mt-3">Real nights, real members</p>
+                </Reveal>
+              </div>
+
+              {/* the evening, in order */}
+              <ol className="lg:col-span-5 flex flex-col">
+                {STEPS.map((s, i) => (
+                  <Reveal as="li" key={s.title} delay={i * 80} className="grid grid-cols-[3rem_1fr] gap-3 py-5 border-t border-[#1A1A1A]/15 first:border-t-2 first:border-[#1A1A1A]">
+                    <span className="font-display font-extrabold text-3xl text-[#F47B20] leading-none">{i + 1}</span>
+                    <div>
+                      <h3 className="font-display font-bold text-[22px] text-[#1A1A1A] leading-tight">{s.title}</h3>
+                      <p className="text-[#374151] mt-1.5 leading-relaxed">{s.text}</p>
+                    </div>
+                  </Reveal>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Back issues ── */}
+        <section className="overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-20 lg:py-24">
+            <Reveal className="flex flex-wrap items-end justify-between gap-6 mb-10">
+              <div>
+                <p className="eyebrow text-[#B4570F]">Back issues</p>
+                <h2 className="font-display font-extrabold text-[clamp(2.2rem,4.6vw,3.8rem)] leading-[0.95] text-[#1A1A1A] mt-3 max-w-2xl">
+                  What we&apos;ve been talking about.
+                </h2>
+              </div>
+              <Link href="/saturdays" className="group inline-flex items-center gap-2 font-semibold text-[#1A1A1A] border-b-2 border-[#F47B20] pb-1">
+                All past Saturdays <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Reveal>
+            <PastSaturdays variant="strip" limit={10} />
+          </div>
+        </section>
+
+        {/* ── Come as you are + FAQ ── */}
+        <section className="bg-[#1A1A1A] text-[#F5F0E8]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-20 lg:py-28 grid lg:grid-cols-12 gap-x-12 gap-y-12">
+            <Reveal className="lg:col-span-5 flex flex-col gap-6">
+              <p className="eyebrow text-[#F47B20]">First time?</p>
+              <h2 className="font-display font-extrabold text-[clamp(2.4rem,5vw,4.2rem)] leading-[0.92]">
+                Come as you are. Leave with new friends.
+              </h2>
+              <p className="text-lg text-[#F5F0E8]/80 leading-relaxed max-w-md">
+                Students, workers, total beginners, near-native speakers. The only thing everyone has in common is wanting to talk.
+              </p>
+              <div className="relative aspect-[16/10] overflow-hidden rounded-sm mt-2 photo-zoom">
+                <Image
+                  src={groupPeace}
+                  alt="Members posing for a group photo on the rooftop, many making peace signs"
+                  fill
+                  placeholder="blur"
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
+            </Reveal>
+
+            <div className="lg:col-span-7">
+              <ul className="border-t border-[#F5F0E8]/25">
+                {FAQ.map((item) => (
+                  <li key={item.q} className="border-b border-[#F5F0E8]/25">
+                    <details className="faq group">
+                      <summary className="flex items-start justify-between gap-6 py-6">
+                        <span className="font-display font-bold text-[clamp(1.2rem,2vw,1.55rem)] leading-snug group-open:text-[#F47B20]">
+                          {item.q}
+                        </span>
+                        <Plus size={26} className="faq-icon shrink-0 mt-0.5 text-[#F47B20]" />
+                      </summary>
+                      <div className="pb-6 -mt-1 pr-10 text-[17px] text-[#F5F0E8]/80 leading-relaxed animate-fadeIn">
+                        <p>{item.a}</p>
+                        {item.link &&
+                          ("external" in item.link ? (
+                            <a href={item.link.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-3 text-[#F47B20] font-semibold underline underline-offset-4">
+                              {item.link.label} <ArrowUpRight size={16} />
+                            </a>
+                          ) : (
+                            <Link href={item.link.href} className="inline-block mt-3 text-[#F47B20] font-semibold underline underline-offset-4">
+                              {item.link.label}
+                            </Link>
+                          ))}
+                      </div>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Collaborate + support ── */}
+        <section>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-20 lg:py-24 grid md:grid-cols-2 gap-6">
+            <Reveal className="p-8 lg:p-10 bg-[#EBF3FD] border-2 border-[#1A1A1A] rounded-md flex flex-col gap-4">
+              <p className="eyebrow text-[#2D5FA8]">For cafés, campuses & communities</p>
+              <h2 className="font-display font-extrabold text-[clamp(1.9rem,3.4vw,2.8rem)] leading-[0.95] text-[#1A1A1A]">
+                Host a Saturday with us.
+              </h2>
+              <p className="text-[#374151] text-lg leading-relaxed">
+                We bring a room full of curious, chatty people. You bring the space, a topic, or both.
+              </p>
+              <Link href="/about#collaborate" className="group mt-auto inline-flex items-center gap-2 font-semibold text-[#1A1A1A] w-fit border-b-2 border-[#2D5FA8] pb-1">
+                How collaboration works <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Reveal>
+            <Reveal delay={120} className="p-8 lg:p-10 bg-[#FFF3EB] border-2 border-[#1A1A1A] rounded-md flex flex-col gap-4">
+              <p className="eyebrow text-[#B4570F]">Free, kept alive by kindness</p>
+              <h2 className="font-display font-extrabold text-[clamp(1.9rem,3.4vw,2.8rem)] leading-[0.95] text-[#1A1A1A]">
+                Help keep it free.
+              </h2>
+              <p className="text-[#374151] text-lg leading-relaxed">
+                Small voluntary donations cover venues, materials and sound gear, so Saturdays stay free for everyone.
+              </p>
+              <Link href="/donate" className="group mt-auto inline-flex items-center gap-2 font-semibold text-[#1A1A1A] w-fit border-b-2 border-[#F47B20] pb-1">
+                Donate via QRIS <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Reveal>
           </div>
         </section>
       </main>
 
       <Footer />
-    </div>
-  );
-}
-
-function StepCard({
-  number,
-  icon,
-  title,
-  desc,
-  color,
-}: {
-  number: string;
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-  color: "orange" | "blue" | "green";
-}) {
-  const colorMap = {
-    orange: {
-      bg: "bg-[#FFF3EB]",
-      number: "text-[#F47B20]/20",
-      iconBg: "bg-[#F47B20]/10",
-      iconColor: "text-[#F47B20]",
-      border: "border-[#F47B20]/10",
-      hover: "hover:border-[#F47B20]/30",
-    },
-    blue: {
-      bg: "bg-[#EBF3FD]",
-      number: "text-[#3B7DD8]/20",
-      iconBg: "bg-[#3B7DD8]/10",
-      iconColor: "text-[#3B7DD8]",
-      border: "border-[#3B7DD8]/10",
-      hover: "hover:border-[#3B7DD8]/30",
-    },
-    green: {
-      bg: "bg-[#ECFDF5]",
-      number: "text-[#22C55E]/20",
-      iconBg: "bg-[#22C55E]/10",
-      iconColor: "text-[#22C55E]",
-      border: "border-[#22C55E]/10",
-      hover: "hover:border-[#22C55E]/30",
-    },
-  };
-  const c = colorMap[color];
-
-  return (
-    <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border ${c.border} ${c.hover} hover:shadow-md transition-all`}>
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`w-10 h-10 rounded-xl ${c.iconBg} flex items-center justify-center ${c.iconColor}`}>
-          {icon}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-3xl font-bold ${c.number}`}>{number}</span>
-        </div>
-      </div>
-      <h3 className="text-lg font-bold text-[#1A1A1A] mb-2">{title}</h3>
-      <p className="text-[#6B7280] text-sm leading-relaxed">{desc}</p>
     </div>
   );
 }

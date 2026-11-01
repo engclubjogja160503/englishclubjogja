@@ -9,6 +9,9 @@
   --blue-light: #EBF3FD;
   --cream: #F5F0E8;
   --cream-dark: #EDE5D8;
+  --ink: #1A1A1A;
+  --body: #374151;
+  --muted: #6B7280;
   --background: #F5F0E8;
   --foreground: #1A1A1A;
 }
@@ -24,8 +27,12 @@
   --color-blue-light: var(--blue-light);
   --color-cream: var(--cream);
   --color-cream-dark: var(--cream-dark);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-bricolage);
+  --font-mono: var(--font-code);
 }
 
 body {
@@ -175,4 +182,104 @@ input:focus, select:focus, textarea:focus {
 /* Checkbox custom */
 input[type="checkbox"] {
   accent-color: var(--orange);
+}
+
+/* ------------------------------------------------------------------
+   "The Saturday Issue" — editorial layer
+   ------------------------------------------------------------------ */
+
+.font-display { letter-spacing: -0.025em; }
+h1, h2, h3 { text-wrap: balance; }
+
+/* Mono labels: issue numbers, dates, seat counts */
+.eyebrow {
+  font-family: var(--font-code), ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Headline words rise in once, on first paint. End state is the resting state. */
+@keyframes wordRise {
+  from { opacity: 0; transform: translateY(0.45em); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.word-rise > span {
+  display: inline-block;
+  animation: wordRise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Hero photo burst: three takes of the same group photo, like a self-timer. */
+@keyframes burst3 {
+  0%, 30% { opacity: 1; }
+  33.33%, 97% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.burst > * { animation: burst3 13.5s linear infinite; }
+.burst > *:nth-child(2) { animation-delay: 4.5s; opacity: 0; }
+.burst > *:nth-child(3) { animation-delay: 9s; opacity: 0; }
+.burst > *:first-child { animation-delay: 0s; }
+
+/* Seat map squares fill one by one */
+@keyframes seatFill {
+  from { background-color: transparent; transform: scale(0.6); }
+  to { transform: scale(1); }
+}
+.seat-taken { animation: seatFill 0.35s ease-out both; }
+
+/* Flash shutter when the burst changes take */
+@keyframes shutter {
+  0%, 32.5%, 34.5%, 65.8%, 67.8%, 99%, 100% { opacity: 0; }
+  33.3%, 66.6% { opacity: 0.35; }
+}
+.shutter { animation: shutter 13.5s linear infinite; animation-delay: 0s; }
+
+/* Scroll reveal: content is visible by default; JS opts it into the effect. */
+[data-reveal="pending"] {
+  opacity: 0;
+  transform: translateY(28px);
+}
+[data-reveal="shown"] {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* Photos ease in slightly on hover */
+.photo-zoom img { transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.photo-zoom:hover img { transform: scale(1.035); }
+
+/* Horizontal strips (back issues, timeline on mobile) */
+.snap-strip {
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.snap-strip::-webkit-scrollbar { display: none; }
+.snap-strip > * { scroll-snap-align: start; }
+
+/* Marquee of the club motto */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track { animation: marquee 38s linear infinite; }
+
+details.faq summary { list-style: none; cursor: pointer; }
+details.faq summary::-webkit-details-marker { display: none; }
+details.faq .faq-icon { transition: transform 0.3s ease; }
+details.faq[open] .faq-icon { transform: rotate(45deg); }
+
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word-rise > span, .seat-taken, .marquee-track, .shutter { animation: none !important; }
+  .burst > * { animation: none !important; }
+  .burst > *:not(:first-child) { opacity: 0 !important; }
+  .burst > *:first-child { opacity: 1 !important; }
+  [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .photo-zoom img { transition: none; }
+  .animate-pulse-glow, .animate-float, .animate-bounce { animation: none !important; }
 }

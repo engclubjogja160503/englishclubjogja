@@ -1,21 +1,33 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Instrument_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Display: chunky grotesque that echoes the logo's stacked "ENGLISH club".
+const display = Bricolage_Grotesque({
+  variable: "--font-bricolage",
+  subsets: ["latin"],
+  weight: ["500", "700", "800"],
+});
+
+const sans = Instrument_Sans({
+  variable: "--font-body",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Mono for dates, times, seat counts — the "issue masthead" voice.
+const mono = DM_Mono({
+  variable: "--font-code",
   subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
-  title: "English Club Jogja — Saturday Night English Practice",
+  title: {
+    default: "English Club Jogja — No grades. No pressure. Just conversations.",
+    template: "%s · English Club Jogja",
+  },
   description:
-    "Join English Club Jogja every Saturday night! Practice English, meet new people, and have fun. Free events across Yogyakarta.",
+    "A free English conversation community in Yogyakarta. Every Saturday night we pick a topic, sit in small groups, and talk. Come as you are.",
   keywords: [
     "English Club",
     "Jogja",
@@ -39,13 +51,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "English Club Jogja",
-    description: "Saturday Night English Practice — Free & Fun!",
+    description: "No grades. No pressure. Just conversations. Every Saturday night in Yogyakarta, free.",
     images: [
       {
-        url: "/images/og-image.png",
+        url: "/images/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "English Club Jogja",
+        alt: "English Club Jogja members on a rooftop in Yogyakarta at night",
       },
     ],
     type: "website",
@@ -54,10 +66,10 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "English Club Jogja",
-    description: "Saturday Night English Practice — Free & Fun!",
-    images: ["/images/og-image.png"],
+    description: "No grades. No pressure. Just conversations.",
+    images: ["/images/og-image.jpg"],
   },
-  metadataBase: new URL("https://english-club-jogja-psi.vercel.app"),
+  metadataBase: new URL("https://www.engclubjogja.online"),
 };
 
 export default function RootLayout({
@@ -68,7 +80,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${display.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#F5F0E8]">{children}</body>
     </html>

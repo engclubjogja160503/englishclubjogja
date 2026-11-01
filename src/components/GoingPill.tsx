@@ -15,10 +15,10 @@ export interface GoingAttendee {
 const AVATAR_BG = [
   "bg-[#F47B20]",
   "bg-[#3B7DD8]",
-  "bg-[#22C55E]",
-  "bg-[#8B5CF6]",
-  "bg-[#EC4899]",
-  "bg-[#14B8A6]",
+  "bg-[#1A1A1A]",
+  "bg-[#D96A15]",
+  "bg-[#2D5FA8]",
+  "bg-[#6B7280]",
 ];
 
 function initialsOf(name: string) {
@@ -59,14 +59,14 @@ export default function GoingPill({
   return (
     <Link
       href={`/attendees?event=${eventId}`}
-      className={`inline-flex items-center gap-2.5 rounded-2xl pl-2 pr-3 py-1.5 border transition-all hover:shadow-md group w-fit max-w-full ${
+      className={`inline-flex items-center gap-2.5 rounded-md pl-1.5 pr-3 py-1.5 border transition-colors group w-fit max-w-full ${
         dark
           ? "bg-[#262626] border-[#404040] hover:border-[#F47B20]/50"
-          : "bg-[#FFF7F0] border-[#F47B20]/25 hover:border-[#F47B20]/60 hover:bg-[#FFF3EB]"
+          : "bg-white border-[#1A1A1A]/15 hover:border-[#1A1A1A]"
       }`}
       title="See who's going"
     >
-      <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-[#22C55E] text-white text-sm font-bold shadow-sm group-hover:bg-[#16A34A] transition-colors shrink-0">
+      <span className="inline-flex items-center px-3 py-1.5 rounded bg-[#1A1A1A] text-[#F5F0E8] text-xs font-semibold uppercase tracking-wider group-hover:bg-[#F47B20] group-hover:text-[#1A1A1A] transition-colors shrink-0">
         Going
       </span>
       <span className="flex items-center shrink-0">
@@ -108,7 +108,7 @@ export default function GoingPill({
       </span>
       <span
         className={`text-xs font-medium hidden sm:inline group-hover:underline underline-offset-2 ${
-          dark ? "text-[#A3A3A3]" : "text-[#F47B20]"
+          dark ? "text-[#A3A3A3]" : "text-[#2D5FA8]"
         }`}
       >
         {total} confirmed &rarr;

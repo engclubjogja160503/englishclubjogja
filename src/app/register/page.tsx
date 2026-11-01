@@ -84,6 +84,19 @@ export default function RegisterPage() {
 
     const supabase = createClient();
 
+    // Usernames are unique; catch a clash before creating the auth account.
+    const { data: taken } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", formData.username)
+      .limit(1)
+      .maybeSingle();
+    if (taken) {
+      setError("That username is already taken. Please choose another one.");
+      setLoading(false);
+      return;
+    }
+
     // Sign up
     const { data, error: authError } = await supabase.auth.signUp({
       email: formData.email,
@@ -122,6 +135,11 @@ export default function RegisterPage() {
 
       if (profileError) {
         console.error("Profile creation error:", profileError);
+        setError(
+          `Your account was created, but we couldn't save your profile (${profileError.message}). Please log in and complete it on your Profile page.`
+        );
+        setLoading(false);
+        return;
       }
     }
 
