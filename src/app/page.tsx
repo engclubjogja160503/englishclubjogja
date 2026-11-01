@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
 import PastSaturdays from "@/components/PastSaturdays";
 import ThisSaturday from "@/components/home/ThisSaturday";
+import HeroSeatButton from "@/components/home/HeroSeatButton";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
 import groupHearts from "@/assets/photos/group-hearts.jpg";
 import groupPeace from "@/assets/photos/group-peace.jpg";
@@ -128,13 +129,7 @@ export default function HomePage() {
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1A1A1A]/85 to-transparent pt-16">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pb-5 lg:pb-8 flex flex-wrap items-end justify-between gap-4">
                 <div className="hidden sm:flex flex-wrap gap-3">
-                  <Link
-                    href="/event"
-                    className="group inline-flex items-center gap-2 px-6 py-3.5 bg-[#F47B20] hover:bg-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md text-[17px] transition-colors"
-                  >
-                    Save a seat for Saturday
-                    <ArrowRight size={19} className="transition-transform group-hover:translate-x-1" />
-                  </Link>
+                  <HeroSeatButton className="group inline-flex items-center gap-2 px-6 py-3.5 bg-[#F47B20] hover:bg-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md text-[17px] transition-colors" />
                   <a
                     href="#how-it-goes"
                     className="inline-flex items-center gap-2 px-5 py-3.5 border-2 border-[#F5F0E8]/70 hover:border-[#F5F0E8] text-[#F5F0E8] font-semibold rounded-md text-[17px]"
@@ -151,12 +146,7 @@ export default function HomePage() {
 
           {/* Mobile: actions under the photo, thumb-reachable */}
           <div className="sm:hidden px-4 py-5 flex flex-col gap-3">
-            <Link
-              href="/event"
-              className="inline-flex items-center justify-between px-5 py-4 bg-[#F47B20] text-[#1A1A1A] font-semibold rounded-md text-lg"
-            >
-              Save a seat for Saturday <ArrowRight size={20} />
-            </Link>
+            <HeroSeatButton wide className="group inline-flex items-center justify-between px-5 py-4 bg-[#F47B20] text-[#1A1A1A] font-semibold rounded-md text-lg" />
             <a href="#how-it-goes" className="text-center text-[#F5F0E8]/80 font-medium py-2">
               What happens on a Saturday ↓
             </a>

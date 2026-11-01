@@ -4,9 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, LogOut, ArrowUpRight } from "lucide-react";
+import { Menu, X, LogOut, ArrowUpRight, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
+import { useMyBooking } from "@/lib/use-my-booking";
 
 const MAIN_LINKS = [
   { href: "/", label: "Home" },
@@ -21,6 +22,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  // Members who already booked see "Seat saved" (it leads to the event page, where they can cancel).
+  const { booked } = useMyBooking();
 
   useEffect(() => {
     const supabase = createClient();
@@ -110,21 +113,33 @@ export default function Navbar() {
                 Sign in
               </Link>
             )}
-            <Link
-              href="/event"
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold text-[15px] rounded-md transition-colors"
-            >
-              Save a seat
-            </Link>
+            {booked ? (
+              <Link
+                href="/event"
+                title="Your seat is saved. Open it to see the details or cancel."
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border-2 border-[#1A1A1A] hover:bg-[#FFF3EB] text-[#1A1A1A] font-semibold text-[15px] rounded-md"
+              >
+                <Check size={16} strokeWidth={3} className="text-[#D96A15]" /> Seat saved
+              </Link>
+            ) : (
+              <Link
+                href="/event"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold text-[15px] rounded-md transition-colors"
+              >
+                Save a seat
+              </Link>
+            )}
           </div>
 
           {/* Mobile toggle */}
           <div className="flex lg:hidden items-center gap-2">
             <Link
               href="/event"
-              className="px-3.5 py-2 bg-[#F47B20] text-[#1A1A1A] font-semibold text-sm rounded-md"
+              className={booked
+                ? "inline-flex items-center gap-1 px-3 py-1.5 bg-white border-2 border-[#1A1A1A] text-[#1A1A1A] font-semibold text-sm rounded-md"
+                : "px-3.5 py-2 bg-[#F47B20] text-[#1A1A1A] font-semibold text-sm rounded-md"}
             >
-              Save a seat
+              {booked ? (<><Check size={14} strokeWidth={3} className="text-[#D96A15]" /> Seat saved</>) : "Save a seat"}
             </Link>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -158,7 +173,7 @@ export default function Navbar() {
             </ul>
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[15px] border-t border-white/15 pt-6">
-              <Link href="/event" onClick={() => setMobileOpen(false)} className="text-[#F47B20] font-semibold">Save a seat</Link>
+              <Link href="/event" onClick={() => setMobileOpen(false)} className="text-[#F47B20] font-semibold">{booked ? "Your seat is saved" : "Save a seat"}</Link>
               <Link href="/cancel" onClick={() => setMobileOpen(false)} className="text-[#F5F0E8]/80">Cancel a booking</Link>
               <a href={WHATSAPP_GROUP_URL} target="_blank" rel="noopener noreferrer" className="text-[#F5F0E8]/80 inline-flex items-center gap-1">
                 WhatsApp group <ArrowUpRight size={14} />

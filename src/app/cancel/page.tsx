@@ -17,6 +17,7 @@ import {
 import { isUpcoming } from "@/lib/events";
 import NoUpcomingEvent from "@/components/NoUpcomingEvent";
 import { CancelledMoment } from "@/components/event/TicketMoments";
+import { forgetMyBooking } from "@/lib/use-my-booking";
 
 interface Booking {
   id: string;
@@ -220,6 +221,7 @@ function CancelPageContent() {
     setLookupDone(false);
     setShowConfirmModal(false);
     setCancelling(false);
+    forgetMyBooking();
     sessionStorage.setItem("bookingCancelled", "true");
     router.push("/cancel?cancelled=true");
   };

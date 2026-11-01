@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import GoingPill, { type GoingAttendee } from "@/components/GoingPill";
+import { type GoingAttendee } from "@/components/GoingPill";
+import IssueCover from "@/components/home/IssueCover";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
 import { countConfirmed, fetchAttendees } from "@/lib/attendees";
 import {
@@ -13,7 +14,6 @@ import {
   formatTime,
   isUpcoming,
   parseTopic,
-  venueLine,
 } from "@/lib/events";
 
 async function loadCounts(supabase: ReturnType<typeof createClient>, ids: string[]) {
@@ -149,117 +149,6 @@ export default function ThisSaturday() {
           </ul>
         </div>
       )}
-    </div>
-  );
-}
-
-function IssueCover({
-  evt,
-  count,
-  attendees,
-}: {
-  evt: EventData;
-  count: number;
-  attendees: GoingAttendee[];
-}) {
-  const topic = parseTopic(evt.description);
-  const spotsLeft = Math.max(evt.max_participants - count, 0);
-  const isFull = spotsLeft <= 0;
-
-  return (
-    <div className="grid lg:grid-cols-12 gap-x-12 gap-y-10">
-      <div className="lg:col-span-7 flex flex-col gap-6">
-        <p className="eyebrow text-[#B4570F]">
-          This Saturday&apos;s topic · {formatDate(evt.event_date)}
-        </p>
-        <h2 className="font-display font-extrabold text-[clamp(2.8rem,7.4vw,6.4rem)] leading-[0.9] text-[#1A1A1A]">
-          {topic.title}
-        </h2>
-        {topic.subtitle && (
-          <p className="font-display font-medium text-[clamp(1.25rem,2.2vw,1.75rem)] leading-snug text-[#2D5FA8] max-w-2xl">
-            {topic.subtitle}
-          </p>
-        )}
-        {topic.body && (
-          <p className="text-[17px] leading-relaxed text-[#374151] max-w-[60ch]">{topic.body}</p>
-        )}
-      </div>
-
-      <aside className="lg:col-span-5 lg:pl-10 lg:border-l-2 lg:border-[#1A1A1A] flex flex-col gap-7">
-        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-[16px]">
-          <dt className="eyebrow text-[#6B7280] pt-0.5">When</dt>
-          <dd className="text-[#1A1A1A] font-medium">
-            {formatDate(evt.event_date, "short")}, {formatTime(evt.event_time)}
-          </dd>
-          <dt className="eyebrow text-[#6B7280] pt-0.5">Where</dt>
-          <dd className="text-[#1A1A1A] font-medium">{venueLine(evt)}</dd>
-          <dt className="eyebrow text-[#6B7280] pt-0.5">Cost</dt>
-          <dd className="text-[#1A1A1A] font-medium">Free. No tickets.</dd>
-        </dl>
-
-        <SeatMap total={evt.max_participants} taken={count} />
-
-        {count > 0 && (
-          <div>
-            <GoingPill attendees={attendees} eventId={evt.id} totalCount={count} />
-          </div>
-        )}
-
-        {isFull ? (
-          <div className="px-6 py-4 bg-[#EDE5D8] text-[#374151] font-semibold rounded-md text-center">
-            Fully booked. See you next Saturday!
-          </div>
-        ) : (
-          <Link
-            href="/event"
-            className="group inline-flex items-center justify-between gap-2 px-6 py-4 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md text-lg transition-colors"
-          >
-            Save your seat
-            <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
-          </Link>
-        )}
-        <p className="text-sm text-[#6B7280] -mt-3">
-          Booked but can&apos;t make it?{" "}
-          <Link href="/cancel" className="text-[#2D5FA8] underline underline-offset-2">
-            Free up your seat
-          </Link>{" "}
-          for someone else.
-        </p>
-      </aside>
-    </div>
-  );
-}
-
-/** One square per chair. Taken seats fill in one by one. */
-function SeatMap({ total, taken }: { total: number; taken: number }) {
-  const left = Math.max(total - taken, 0);
-  const seats = Array.from({ length: total });
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="eyebrow text-[#1A1A1A]">
-          {Math.min(taken, total)} / {total} seats taken
-        </span>
-        <span className={`eyebrow ${left <= 5 ? "text-[#DC2626]" : "text-[#B4570F]"}`}>
-          {left === 0 ? "Full" : `${left} left`}
-        </span>
-      </div>
-      <div
-        className="grid gap-[5px]"
-        style={{ gridTemplateColumns: `repeat(${Math.min(total, 10)}, minmax(0, 1fr))` }}
-        role="img"
-        aria-label={`${taken} of ${total} seats taken`}
-      >
-        {seats.map((_, i) => (
-          <span
-            key={i}
-            className={`aspect-square rounded-[3px] ${
-              i < taken ? "bg-[#F47B20] seat-taken" : "border-[1.5px] border-[#1A1A1A]/25"
-            }`}
-            style={i < taken ? { animationDelay: `${i * 28}ms` } : undefined}
-          />
-        ))}
-      </div>
     </div>
   );
 }

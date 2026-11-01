@@ -8,6 +8,8 @@ import Footer from "@/components/Footer";
 import GoingPill, { type GoingAttendee } from "@/components/GoingPill";
 import NoUpcomingEvent from "@/components/NoUpcomingEvent";
 import EventTicket from "@/components/event/EventTicket";
+import { GoingInfo, SavedSeat } from "@/components/event/SeatStatus";
+import { useMyBooking } from "@/lib/use-my-booking";
 import { createClient } from "@/lib/supabase/client";
 import { countConfirmed, fetchAttendees } from "@/lib/attendees";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
@@ -109,7 +111,10 @@ export default function EventPage() {
 
           {taken > 0 && (
             <div className="mt-2">
-              <GoingPill attendees={attendees} eventId={event.id} totalCount={taken} />
+              <span className="inline-flex items-center gap-2.5">
+                <GoingPill attendees={attendees} eventId={event.id} totalCount={taken} />
+                <GoingInfo />
+              </span>
             </div>
           )}
         </section>
@@ -123,6 +128,8 @@ export default function EventPage() {
 }
 
 function ClaimButton({ isFull, wide = false }: { isFull: boolean; wide?: boolean }) {
+  const mine = useMyBooking();
+  if (mine.booked) return <SavedSeat event={mine.event} wide={wide} />;
   if (isFull) {
     return (
       <span className={`inline-flex items-center justify-center px-6 py-4 bg-[#EDE5D8] text-[#374151] font-semibold rounded-md text-lg ${wide ? "w-full" : ""}`}>
@@ -241,7 +248,10 @@ function EventDialog({
 
           {taken > 0 && (
             <div>
-              <GoingPill attendees={attendees} eventId={event.id} totalCount={taken} />
+              <span className="inline-flex items-center gap-2.5">
+                <GoingPill attendees={attendees} eventId={event.id} totalCount={taken} />
+                <GoingInfo />
+              </span>
             </div>
           )}
 

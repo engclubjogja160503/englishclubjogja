@@ -19,6 +19,7 @@ import {
 } from "@/lib/constants";
 import { isUpcoming, type EventData as FullEvent } from "@/lib/events";
 import { BookedMoment } from "@/components/event/TicketMoments";
+import { forgetMyBooking } from "@/lib/use-my-booking";
 import { countConfirmed, fetchAttendees } from "@/lib/attendees";
 
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_WEBHOOK_URL;
@@ -263,7 +264,8 @@ export default function BookPage() {
 
     if (existingBooking) {
       setBookingId(existingBooking.id);
-      setStep("success");
+      forgetMyBooking();
+    setStep("success");
       setSubmitting(false);
       return;
     }
@@ -321,6 +323,7 @@ export default function BookPage() {
     }
 
     setBookingId(booking?.id || "");
+    forgetMyBooking();
     setStep("success");
     setSubmitting(false);
   };
@@ -481,6 +484,7 @@ export default function BookPage() {
     }
 
     setBookingId(booking?.id || "");
+    forgetMyBooking();
     setStep("success");
     setSubmitting(false);
   };
