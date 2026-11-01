@@ -17,7 +17,7 @@ const COLUMNS: FooterColumn[] = [
   {
     title: "Your seat",
     links: [
-      { label: "Save a seat", href: "/book" },
+      { label: "Save a seat", href: "/event" },
       { label: "Cancel a booking", href: "/cancel" },
       { label: "Member sign in", href: "/login" },
       { label: "Become a member", href: "/register" },
@@ -63,7 +63,7 @@ export default function Footer() {
       columns={COLUMNS}
       actions={[
         { label: "Join the WhatsApp group", href: WHATSAPP_GROUP_URL, icon: "speech", variant: "outline" },
-        { label: "Save a seat", href: "/book", icon: "star", variant: "solid" },
+        { label: "Save a seat", href: "/event", icon: "star", variant: "solid" },
       ]}
       copyright={`© ${new Date().getFullYear()} English Club Jogja. Made in Yogyakarta, by the people who show up.`}
       socials={[

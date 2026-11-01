@@ -157,7 +157,7 @@ export default function AboutPage() {
             The easiest way to understand ECJ is to come once.
           </h2>
           <Link
-            href="/book"
+            href="/event"
             className="group inline-flex items-center gap-2 px-6 py-4 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md text-lg shrink-0 transition-colors"
           >
             Save a seat <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />

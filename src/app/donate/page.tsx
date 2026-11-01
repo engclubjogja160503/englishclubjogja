@@ -76,7 +76,7 @@ export default function DonatePage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/book"
+                href="/event"
                 className="group inline-flex items-center gap-2 px-6 py-3.5 bg-[#F47B20] hover:bg-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md transition-colors"
               >
                 Save a seat <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />

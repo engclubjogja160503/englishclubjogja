@@ -211,7 +211,7 @@ function IssueCover({
           </div>
         ) : (
           <Link
-            href="/book"
+            href="/event"
             className="group inline-flex items-center justify-between gap-2 px-6 py-4 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md text-lg transition-colors"
           >
             Save your seat

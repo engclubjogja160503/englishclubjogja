@@ -111,7 +111,7 @@ export default function Navbar() {
               </Link>
             )}
             <Link
-              href="/book"
+              href="/event"
               className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold text-[15px] rounded-md transition-colors"
             >
               Save a seat
@@ -121,7 +121,7 @@ export default function Navbar() {
           {/* Mobile toggle */}
           <div className="flex lg:hidden items-center gap-2">
             <Link
-              href="/book"
+              href="/event"
               className="px-3.5 py-2 bg-[#F47B20] text-[#1A1A1A] font-semibold text-sm rounded-md"
             >
               Save a seat
@@ -158,7 +158,7 @@ export default function Navbar() {
             </ul>
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[15px] border-t border-white/15 pt-6">
-              <Link href="/book" onClick={() => setMobileOpen(false)} className="text-[#F47B20] font-semibold">Save a seat</Link>
+              <Link href="/event" onClick={() => setMobileOpen(false)} className="text-[#F47B20] font-semibold">Save a seat</Link>
               <Link href="/cancel" onClick={() => setMobileOpen(false)} className="text-[#F5F0E8]/80">Cancel a booking</Link>
               <a href={WHATSAPP_GROUP_URL} target="_blank" rel="noopener noreferrer" className="text-[#F5F0E8]/80 inline-flex items-center gap-1">
                 WhatsApp group <ArrowUpRight size={14} />

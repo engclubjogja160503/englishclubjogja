@@ -496,6 +496,42 @@ const Doodle = ({ kind }: { kind: DoodleKind }) => {
   return null
 }
 
+/** A doodle on its own, for reuse outside the footer (32-unit box centred on 0, 0). */
+export const DoodleShape = Doodle
+
+export const CREW_KINDS = Object.keys(ART) as CrewKind[]
+
+/**
+ * One crew member drawn on its own SVG, for reuse outside the footer (the event
+ * ticket uses it). Styling comes from the `.crew-art` rules the caller provides.
+ */
+export function CrewFigure({ kind, className, pad = 8 }: { kind: CrewKind; className?: string; pad?: number }) {
+  const id = React.useId().replace(/[^a-zA-Z0-9_-]/g, "")
+  const art = ART[kind]
+  if (!art) return null
+  const { l, r, t, b } = art.box
+  return (
+    <svg className={className} viewBox={`${l - pad} ${t - pad} ${r - l + pad * 2} ${b - t + pad * 2}`} aria-hidden="true">
+      <defs>
+        <pattern id={id + "h"} width="4.6" height="4.6" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+          <line x1="0" y1="0" x2="0" y2="4.6" stroke="#1A1A1A" strokeWidth="1.25" />
+        </pattern>
+      </defs>
+      <g className="crew-art">
+        {art.body(`url(#${id}h)`)}
+        {art.eyes.map((eye, e) => (
+          <g key={e} className="crew-eye">
+            {eye.r > 0 && <circle cx={eye.x} cy={eye.y} r={eye.r} />}
+            <circle className="k" cx={eye.x} cy={eye.y} r={eye.pupil} />
+            <circle className="glint" cx={eye.x + eye.pupil * 0.35} cy={eye.y - eye.pupil * 0.4} r={eye.pupil * 0.32} />
+          </g>
+        ))}
+        {art.front?.()}
+      </g>
+    </svg>
+  )
+}
+
 const DoodleIcon = ({ kind, size = 18 }: { kind: DoodleKind; size?: number }) => (
   <svg className="dcf-icon" viewBox="-16 -16 32 32" width={size} height={size} aria-hidden="true">
     <Doodle kind={kind} />

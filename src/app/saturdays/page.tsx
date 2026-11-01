@@ -27,7 +27,7 @@ export default function SaturdaysPage() {
               Every week has its own topic. Here&apos;s what we&apos;ve talked about so far, newest first.
             </p>
             <Link
-              href="/book"
+              href="/event"
               className="group mt-2 inline-flex items-center gap-2 px-6 py-3.5 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md w-fit transition-colors"
             >
               Join the next one <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />

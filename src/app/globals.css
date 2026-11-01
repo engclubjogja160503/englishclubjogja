@@ -246,6 +246,13 @@ h1, h2, h3 { text-wrap: balance; }
   transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
+/* Dialog panels slide up; movement only, never hidden. */
+@keyframes dialogRise {
+  from { transform: translateY(32px); }
+  to { transform: none; }
+}
+.dialog-rise { animation: dialogRise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+
 /* Photos ease in slightly on hover */
 .photo-zoom img { transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .photo-zoom:hover img { transform: scale(1.035); }

@@ -140,7 +140,7 @@ function AttendeesContent() {
                     No confirmed attendees yet. Be the first!
                   </p>
                   <Link
-                    href="/book"
+                    href="/event"
                     className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md transition-colors"
                   >
                     Save your seat
@@ -194,7 +194,7 @@ function AttendeesContent() {
 
               <div className="mt-6 text-center">
                 <Link
-                  href="/book"
+                  href="/event"
                   className="inline-flex items-center gap-2 px-8 py-4 bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] text-[#1A1A1A] font-semibold rounded-md transition-colors text-lg"
                 >
                   Join them. Save your seat

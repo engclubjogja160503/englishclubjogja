@@ -345,7 +345,7 @@ function CancelPageContent() {
                     Cancel as a Guest
                   </button>
                   <Link
-                    href="/book"
+                    href="/event"
                     className="text-sm font-semibold text-[#F47B20] hover:text-[#D96A15]"
                   >
                     Or book a new seat
