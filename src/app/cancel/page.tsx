@@ -250,8 +250,8 @@ function CancelPageContent() {
         <Navbar />
         <div className="flex-1 flex items-center justify-center px-4 py-16">
           <NoUpcomingEvent
-            title="No upcoming Saturday to cancel"
-            text="There's no session open right now, so there's nothing to cancel. The next topic is announced in our WhatsApp group first."
+            title="Nothing to cancel right now"
+            text="There's no upcoming event yet. The next one will show up here as soon as possible, so please wait for the info in our WhatsApp group."
           />
         </div>
         <Footer />

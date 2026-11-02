@@ -9,7 +9,8 @@ import { WHATSAPP_GROUP_URL } from "@/lib/constants";
 import { type EventData, formatDate, formatTime, parseTopic, venueLine } from "@/lib/events";
 
 /**
- * The two "after" screens of booking: confirmed and cancelled. Same sketchbook
+ * The two "after" screens of booking (confirmed and cancelled), plus the
+ * "coming soon" art for when nothing is scheduled. Same sketchbook
  * language as the footer and the event ticket. All motion is transform-only,
  * so everything stays readable if a browser skips animations.
  */
@@ -233,7 +234,73 @@ export function CancelledMoment({ onAnother }: { onAnother?: () => void }) {
   );
 }
 
+/**
+ * The "nothing scheduled yet" art: a blank ticket that floats in, gets a
+ * COMING SOON stamp, doodles drifting around it, and the bird with a reminder.
+ */
+export function ComingSoonArt({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={"mo mo-soon" + (compact ? " is-compact" : "")}>
+      <style>{CSS}</style>
+      <div className="mo-soon-ticket" aria-hidden="true">
+        <div className="mo-burst">
+          {BURST.slice(0, compact ? 5 : 8).map((d, k) => (
+            <svg
+              key={k}
+              viewBox="-16 -16 32 32"
+              className="mo-burst-doodle mo-soon-float"
+              style={{ "--dx": d.dx * 0.8 + "px", "--dy": d.dy * 0.6 + "px", "--r": d.r + "deg", animationDelay: `${0.2 + k * 0.06}s, ${1.2 + k * 0.3}s` } as React.CSSProperties}
+            >
+              <DoodleShape kind={d.kind} />
+            </svg>
+          ))}
+        </div>
+        <svg viewBox="-20 -20 640 270" className="mo-soon-svg">
+          <path d="M18 0 L582 0 Q600 0 600 18 L600 202 Q600 220 582 220 L18 220 Q0 220 0 202 L0 18 Q0 0 18 0 Z" className="mo-torn-paper" />
+          <path d="M440 6 L440 214" className="mo-torn-perf" />
+          <rect x="446" y="6" width="148" height="208" rx="12" className="mo-torn-stub" />
+          <text x="32" y="44" className="mo-torn-mono">ADMIT ONE · ENGLISH CLUB JOGJA</text>
+          <text x="32" y="112" className="mo-torn-big">NEXT EVENT</text>
+          <text x="32" y="176" className="mo-torn-big is-blue mo-soon-dots">
+            LOADING<tspan className="d1">.</tspan><tspan className="d2">.</tspan><tspan className="d3">.</tspan>
+          </text>
+          <text x="519" y="96" className="mo-torn-day" textAnchor="middle">SAT</text>
+          <text x="519" y="150" className="mo-torn-mono" textAnchor="middle">?? / ??</text>
+          <g className="mo-soon-stamp" transform="translate(482 204) rotate(-12)">
+            <rect x="-110" y="-24" width="220" height="48" rx="6" />
+            <text x="0" y="9" textAnchor="middle">COMING SOON</text>
+          </g>
+        </svg>
+      </div>
+      <TalkingCrew
+        kind="bird"
+        lines={[
+          "The next event is on its way!",
+          "We'll post it here as soon as we can.",
+          "Keep an eye on our WhatsApp group!",
+        ]}
+      />
+    </div>
+  );
+}
+
 const CSS = `
+.mo.mo-soon{padding:8px 0 0;gap:6px;max-width:640px;width:100%}
+.mo-soon-ticket{position:relative;width:100%;animation:mo-soon-in .8s cubic-bezier(.3,1.4,.5,1) backwards}
+.mo-soon-svg{position:relative;z-index:1;width:100%;height:auto;overflow:visible;animation:mo-soon-bob 4s ease-in-out 1s infinite}
+.mo-soon .mo-burst{top:50%}
+.mo-soon-float{animation:mo-burst .9s cubic-bezier(.2,.9,.3,1.2) backwards,mo-soon-drift 3.4s ease-in-out infinite}
+.mo-soon-dots tspan{animation:mo-soon-dot 1.4s ease-in-out infinite}
+.mo-soon-dots .d2{animation-delay:.2s}.mo-soon-dots .d3{animation-delay:.4s}
+.mo-soon-stamp{transform-box:fill-box;transform-origin:center;animation:mo-soon-stamp .55s cubic-bezier(.3,1.5,.5,1) .7s backwards}
+.mo-soon-stamp rect{fill:rgba(255,253,248,.8);stroke:#D96A15;stroke-width:4}
+.mo-soon-stamp text{font-family:var(--font-bricolage),'Arial Black',sans-serif;font-weight:800;font-size:28px;letter-spacing:2px;fill:#D96A15}
+.mo-soon.is-compact .mo-talker{margin-top:-4px}
+@keyframes mo-soon-in{0%{transform:translateY(40px) rotate(-4deg) scale(.9)}100%{transform:none}}
+@keyframes mo-soon-bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(-1deg)}}
+@keyframes mo-soon-drift{0%,100%{translate:0 0}50%{translate:0 -10px}}
+@keyframes mo-soon-dot{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes mo-soon-stamp{0%{transform:scale(2.2)}100%{transform:scale(1)}}
 .mo{max-width:820px;margin:0 auto;padding:48px 16px 72px;overflow-x:clip;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
 .mo-title{font-family:var(--font-bricolage),'Arial Black',sans-serif;font-weight:800;font-size:clamp(48px,9vw,88px);line-height:.9;letter-spacing:-.035em;color:#1A1A1A;margin:0}
 .mo-lede{font-size:18px;line-height:1.5;color:#374151;max-width:52ch}

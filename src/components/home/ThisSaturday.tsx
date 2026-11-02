@@ -6,6 +6,7 @@ import { ArrowUpRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { type GoingAttendee } from "@/components/GoingPill";
 import IssueCover from "@/components/home/IssueCover";
+import { ComingSoonArt } from "@/components/event/TicketMoments";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
 import { countConfirmed, fetchAttendees } from "@/lib/attendees";
 import {
@@ -92,17 +93,20 @@ export default function ThisSaturday() {
 
   if (events.length === 0) {
     return (
-      <div className="grid lg:grid-cols-12 gap-10 items-end">
-        <div className="lg:col-span-8">
+      <div className="grid lg:grid-cols-12 gap-10 items-center">
+        <div className="lg:col-span-6">
           <p className="eyebrow text-[#B4570F]">Next Saturday</p>
           <h2 className="font-display font-extrabold text-[clamp(2.4rem,6vw,4.8rem)] leading-[0.95] text-[#1A1A1A] mt-4">
-            The next topic is being cooked up.
+            The next event is coming soon!
           </h2>
           <p className="mt-5 text-lg text-[#374151] max-w-xl">
-            Each week&apos;s topic and venue are announced in our WhatsApp group first. Join it and you&apos;ll hear about Saturday before anyone else.
+            The next event will show up here as soon as possible. In the meantime, please wait for the info in our WhatsApp group.
           </p>
         </div>
-        <div className="lg:col-span-4 flex flex-col gap-3">
+        <div className="lg:col-span-6 flex justify-center">
+          <ComingSoonArt compact />
+        </div>
+        <div className="lg:col-span-12 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
           <a
             href={WHATSAPP_GROUP_URL}
             target="_blank"

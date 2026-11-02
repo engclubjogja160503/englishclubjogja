@@ -5,11 +5,12 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, Home, LogIn } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
+import { ComingSoonArt } from "@/components/event/TicketMoments";
 
 /** Shown when there is no upcoming Saturday to book or cancel. Never a dead end. */
 export default function NoUpcomingEvent({
-  title = "No Saturday open for booking yet",
-  text = "The next topic and venue are announced in our WhatsApp group first. Join it and you'll know before anyone else.",
+  title = "The next event is coming soon!",
+  text = "The next event will show up here as soon as possible. In the meantime, please wait for the info in our WhatsApp group.",
 }: {
   title?: string;
   text?: string;
@@ -29,6 +30,7 @@ export default function NoUpcomingEvent({
         {title}
       </h1>
       <p className="text-lg text-[#374151] leading-relaxed">{text}</p>
+      <ComingSoonArt />
 
       <div className="w-full flex flex-col gap-3 mt-3">
         <a
