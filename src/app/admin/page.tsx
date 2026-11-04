@@ -36,6 +36,7 @@ interface EventData {
   venue_address: string;
   max_participants: number;
   description: string;
+  theme?: string | null;
   is_active: boolean;
   is_archived?: boolean | null;
   booking_count?: number;
@@ -88,6 +89,7 @@ const emptyEvent = {
   venue_name: "",
   venue_address: "",
   max_participants: 40,
+  theme: "",
   description: "",
 };
 
@@ -223,13 +225,22 @@ export default function AdminPage() {
       venue_name: eventForm.venue_name,
       venue_address: eventForm.venue_address,
       max_participants: eventForm.max_participants,
+      theme: eventForm.theme.trim() || null,
       description: eventForm.description,
     };
 
-    if (editingEvent) {
-      await supabase.from("events").update(eventData).eq("id", editingEvent);
-    } else {
-      await supabase.from("events").insert({ ...eventData, is_active: true });
+    const { error } = editingEvent
+      ? await supabase.from("events").update(eventData).eq("id", editingEvent)
+      : await supabase.from("events").insert({ ...eventData, is_active: true });
+
+    if (error) {
+      setSaving(false);
+      alert(
+        error.message.includes("theme")
+          ? "The Theme column isn't in the database yet. Run supabase/add-event-theme.sql in the Supabase SQL Editor, then save again."
+          : "Couldn't save the event: " + error.message
+      );
+      return;
     }
 
     setSaving(false);
@@ -247,6 +258,7 @@ export default function AdminPage() {
       venue_name: event.venue_name,
       venue_address: event.venue_address,
       max_participants: event.max_participants,
+      theme: event.theme || "",
       description: event.description || "",
     });
     setShowEventForm(true);
@@ -777,6 +789,22 @@ export default function AdminPage() {
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#374151] mb-1">
+                    Theme
+                  </label>
+                  <input
+                    type="text"
+                    value={eventForm.theme}
+                    onChange={(e) => setEventForm({ ...eventForm, theme: e.target.value })}
+                    maxLength={90}
+                    placeholder="e.g., Friendship Dynamics: Green Flag or Red Flag?"
+                    className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-[#1A1A1A] placeholder-[#9CA3AF] focus:border-[#3B7DD8]"
+                  />
+                  <p className="mt-1 text-xs text-[#6B7280]">
+                    The big headline of This Saturday on the website. Leave it empty to use the first line of the description.
+                  </p>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-[#374151] mb-1">
                     Description
                   </label>
                   <textarea
@@ -986,6 +1014,9 @@ export default function AdminPage() {
                     <Clock size={12} />
                     <span>{formatTime(event.event_time)}</span>
                   </div>
+                  {event.theme && (
+                    <p className="text-xs font-semibold text-[#B4570F] mt-1 truncate" title={event.theme}>{event.theme}</p>
+                  )}
                   <p className="text-xs text-[#6B7280] mt-1 truncate">{event.venue_name}</p>
                   <div className="flex items-center gap-1 mt-2 text-xs text-[#374151]">
                     <Users size={14} />

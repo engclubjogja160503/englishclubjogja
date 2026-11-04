@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { countConfirmed } from "@/lib/attendees";
-import { type EventData, DEFAULT_TOPIC, formatDate, parseTopic, todayInJogja, venueLine } from "@/lib/events";
+import { type EventData, DEFAULT_TOPIC, formatDate, eventTopic, todayInJogja, venueLine } from "@/lib/events";
 
 type PastEvent = Pick<EventData, "id" | "event_date" | "venue_name" | "venue_address" | "description"> & {
   booked?: number;
@@ -27,7 +27,7 @@ export default function PastSaturdays({
       const supabase = createClient();
       const { data } = await supabase
         .from("events")
-        .select("id, event_date, venue_name, venue_address, description")
+        .select("id, event_date, venue_name, venue_address, description, theme")
         .lt("event_date", todayInJogja())
         .order("event_date", { ascending: false })
         .limit(limit);
@@ -67,13 +67,13 @@ export default function PastSaturdays({
 
   if (variant === "strip") {
     // Older sessions often have no topic written down; keep the strip to the ones that do.
-    const withTopic = items.filter((evt) => parseTopic(evt.description).title !== DEFAULT_TOPIC);
+    const withTopic = items.filter((evt) => eventTopic(evt).title !== DEFAULT_TOPIC);
     const rest = items.length - withTopic.length;
     const oldest = items[items.length - 1];
     return (
       <ul className="snap-strip flex gap-5 overflow-x-auto -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 pb-2">
         {withTopic.map((evt) => {
-          const topic = parseTopic(evt.description);
+          const topic = eventTopic(evt);
           const i = items.indexOf(evt);
           return (
             <li
@@ -116,7 +116,7 @@ export default function PastSaturdays({
   return (
     <ol className="border-t-2 border-[#1A1A1A]">
       {items.map((evt) => {
-        const topic = parseTopic(evt.description);
+        const topic = eventTopic(evt);
         return (
           <li
             key={evt.id}

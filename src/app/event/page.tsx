@@ -13,7 +13,7 @@ import { useMyBooking } from "@/lib/use-my-booking";
 import { createClient } from "@/lib/supabase/client";
 import { countConfirmed, fetchAttendees } from "@/lib/attendees";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
-import { type EventData, formatDate, formatTime, isUpcoming, parseTopic, venueLine } from "@/lib/events";
+import { type EventData, formatDate, formatTime, isUpcoming, eventTopic, venueLine } from "@/lib/events";
 
 export default function EventPage() {
   const [event, setEvent] = useState<EventData | null>(null);
@@ -160,7 +160,7 @@ function EventDialog({
   onClose: () => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
-  const topic = parseTopic(event.description);
+  const topic = eventTopic(event);
   const venue = venueLine(event);
   const hasVenue = !/announced in the WhatsApp group/.test(venue);
   const left = Math.max(event.max_participants - taken, 0);

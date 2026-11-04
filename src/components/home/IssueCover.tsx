@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import GoingPill, { type GoingAttendee } from "@/components/GoingPill";
 import { CrewFigure, DoodleShape, type DoodleKind } from "@/components/ui/doodle-crew-footer";
-import { type EventData, formatDate, formatTime, parseTopic, venueLine } from "@/lib/events";
+import { type EventData, formatDate, formatTime, eventTopic, venueLine } from "@/lib/events";
 import { useMyBooking } from "@/lib/use-my-booking";
 import { GoingInfo, SavedSeat } from "@/components/event/SeatStatus";
 
@@ -76,7 +76,7 @@ export default function IssueCover({
   count: number;
   attendees: GoingAttendee[];
 }) {
-  const topic = parseTopic(evt.description);
+  const topic = eventTopic(evt);
   const spotsLeft = Math.max(evt.max_participants - count, 0);
   const isFull = spotsLeft <= 0;
   const { ref, inView } = useInView<HTMLDivElement>();

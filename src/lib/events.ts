@@ -6,6 +6,7 @@ export interface EventData {
   venue_address: string | null;
   max_participants: number;
   description: string | null;
+  theme?: string | null;
   is_active?: boolean | null;
   is_archived?: boolean | null;
 }
@@ -70,6 +71,21 @@ export function parseTopic(description: string | null) {
   const rest = stripEmoji(afterColon);
   const m = rest.match(/^(.{8,160}?[.!?])\s+([\s\S]*)$/);
   return { title, subtitle: m ? m[1] : rest, body: m ? m[2] : "" };
+}
+
+/**
+ * The headline of an event. The admin's Theme wins when it is filled in;
+ * otherwise the title is read out of the description as before.
+ */
+export function eventTopic(evt: Pick<EventData, "description" | "theme">) {
+  const parsed = parseTopic(evt.description);
+  const theme = stripEmoji(evt.theme || "");
+  if (!theme) return parsed;
+  // The description may open with that same title; then keep its subtitle and body.
+  if (parsed.title !== DEFAULT_TOPIC && parsed.title.toLowerCase() === theme.toLowerCase()) {
+    return { ...parsed, title: theme };
+  }
+  return { title: theme, subtitle: "", body: stripEmoji(evt.description || "") };
 }
 
 const CONNECTORS = new Set([...SMALL_WORDS, "&", "were", "was", "is", "are", "if", "be"]);

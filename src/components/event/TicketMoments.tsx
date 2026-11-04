@@ -6,7 +6,7 @@ import { ArrowRight, ArrowUpRight, CalendarPlus, Check, Copy, Home } from "lucid
 import EventTicket from "@/components/event/EventTicket";
 import { CrewFigure, DoodleShape, type CrewKind, type DoodleKind } from "@/components/ui/doodle-crew-footer";
 import { WHATSAPP_GROUP_URL } from "@/lib/constants";
-import { type EventData, formatDate, formatTime, parseTopic, venueLine } from "@/lib/events";
+import { type EventData, formatDate, formatTime, eventTopic, venueLine } from "@/lib/events";
 
 /**
  * The two "after" screens of booking (confirmed and cancelled), plus the
@@ -52,7 +52,7 @@ const BURST: { kind: DoodleKind; dx: number; dy: number; r: number }[] = [
 ];
 
 function calendarUrl(event: EventData) {
-  const topic = parseTopic(event.description).title;
+  const topic = eventTopic(event).title;
   const [h, m] = (event.event_time || "19:00").split(":").map((v) => parseInt(v, 10));
   // WIB is UTC+7. Sessions are listed with a start time only, so block out two hours.
   const start = new Date(`${event.event_date}T00:00:00Z`);

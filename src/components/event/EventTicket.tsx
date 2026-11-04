@@ -1,7 +1,7 @@
 "use client";
 
 import { CrewFigure, DoodleShape, type CrewKind, type DoodleKind } from "@/components/ui/doodle-crew-footer";
-import { type EventData, formatTime, parseTopic, venueLine } from "@/lib/events";
+import { type EventData, formatTime, eventTopic, venueLine } from "@/lib/events";
 
 /**
  * A hand-drawn admission ticket, generated from the event the admin filled in.
@@ -40,7 +40,7 @@ export default function EventTicket({
   taken: number;
   compact?: boolean;
 }) {
-  const topic = parseTopic(event.description);
+  const topic = eventTopic(event);
   const seed = seedOf(event.event_date + event.id);
   const theme = THEMES[seed % THEMES.length];
   const crew = CREW[seed % CREW.length];

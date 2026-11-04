@@ -14,7 +14,7 @@ import {
   formatDate,
   formatTime,
   isUpcoming,
-  parseTopic,
+  eventTopic,
 } from "@/lib/events";
 
 async function loadCounts(supabase: ReturnType<typeof createClient>, ids: string[]) {
@@ -137,7 +137,7 @@ export default function ThisSaturday() {
           <p className="eyebrow text-[#6B7280] mb-4">Also coming up</p>
           <ul className="grid sm:grid-cols-2 gap-6">
             {later.map((evt) => {
-              const topic = parseTopic(evt.description);
+              const topic = eventTopic(evt);
               return (
                 <li key={evt.id} className="flex flex-col gap-1">
                   <span className="eyebrow text-[#B4570F]">
