@@ -20,17 +20,36 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    // Supabase sends users here with a recovery session in the URL hash.
-    // getSession picks it up once the client loads.
-    supabase.auth.getSession().then(({ data }) => {
-      setValid(!!data.session);
-      setChecking(false);
-    });
+    const query = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.slice(1));
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") setValid(true);
     });
+
+    (async () => {
+      // Supabase says the link was already used or has expired.
+      if (query.get("error_code") || hash.get("error_code")) {
+        setChecking(false);
+        return;
+      }
+      // Email template link (?token_hash=…&type=recovery): verified here, so it
+      // works in any browser or device, not only the one that asked for it.
+      const tokenHash = query.get("token_hash");
+      if (tokenHash) {
+        const { error: verifyError } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" });
+        window.history.replaceState(null, "", "/reset-password");
+        setValid(!verifyError);
+        setChecking(false);
+        return;
+      }
+      // Default Supabase link (?code=…): the client exchanges it on load.
+      const { data } = await supabase.auth.getSession();
+      setValid(!!data.session);
+      setChecking(false);
+    })();
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -55,7 +74,7 @@ export default function ResetPasswordPage() {
     }
     setDone(true);
     setLoading(false);
-    setTimeout(() => router.push("/book"), 2500);
+    setTimeout(() => router.push("/profile"), 2500);
   };
 
   return (
@@ -94,7 +113,7 @@ export default function ResetPasswordPage() {
                 Password updated! 🎉
               </h1>
               <p className="text-[#6B7280]">
-                Taking you to the booking page...
+                You&apos;re signed in. Taking you to your profile...
               </p>
             </div>
           ) : !valid ? (
@@ -102,9 +121,12 @@ export default function ResetPasswordPage() {
               <h1 className="text-2xl font-bold text-[#1A1A1A] mb-2">
                 Link expired or invalid 😢
               </h1>
-              <p className="text-[#6B7280] mb-6">
+              <p className="text-[#6B7280] mb-3">
                 Reset links only work once and expire after a while. Please
                 request a new one.
+              </p>
+              <p className="text-sm text-[#9CA3AF] mb-6">
+                Tip: open the new link in the same browser you request it from.
               </p>
               <Link
                 href="/forgot-password"

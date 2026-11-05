@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Loader2, Save, UserRound, Camera, X, Check } from "lucide-react";
+import { Loader2, Save, UserRound, Camera, X, Check, Eye, EyeOff } from "lucide-react";
 import {
   DOMICILE_OPTIONS,
   EXPECTATION_OPTIONS,
@@ -39,6 +39,10 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  // the sign-in email as Supabase knows it, so saving only asks to change it when it really changed
+  const [authEmail, setAuthEmail] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Crop state
   const [showCrop, setShowCrop] = useState(false);
@@ -59,6 +63,7 @@ export default function ProfilePage() {
         return;
       }
       setUserId(auth.user.id);
+      setAuthEmail(auth.user.email || "");
       setFormData((current) => ({ ...current, email: auth.user.email || "" }));
       const { data: profile } = await supabase
         .from("profiles")
@@ -225,17 +230,36 @@ export default function ProfilePage() {
 
   const saveProfile = async (event: React.FormEvent) => {
     event.preventDefault();
-    setSaving(true);
     setMessage("");
     setError("");
+    const newPassword = formData.password;
+    if (newPassword) {
+      if (newPassword.length < 6) {
+        setError("Your new password needs at least 6 characters.");
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setError("The two new passwords don't match. Please type them again.");
+        return;
+      }
+    }
+    setSaving(true);
     const supabase = createClient();
+    const email = formData.email.trim();
+    const emailChanged = !!email && email.toLowerCase() !== authEmail.toLowerCase();
     const updates: { email?: string; password?: string } = {};
-    if (formData.email) updates.email = formData.email;
-    if (formData.password) updates.password = formData.password;
+    if (emailChanged) updates.email = email;
+    if (newPassword) updates.password = newPassword;
     if (Object.keys(updates).length) {
       const { error: authError } = await supabase.auth.updateUser(updates);
       if (authError) {
-        setError(authError.message);
+        setError(
+          /same.*password|different from the old/i.test(authError.message)
+            ? "That's already your password. Choose a different one."
+            : /reauthenticat|recent/i.test(authError.message)
+            ? "For safety, please sign out and sign in again, then change your password."
+            : authError.message
+        );
         setSaving(false);
         return;
       }
@@ -258,8 +282,15 @@ export default function ProfilePage() {
       })
       .eq("id", userId);
     if (profileError) setError(profileError.message);
-    else setMessage("Profile saved successfully.");
+    else
+      setMessage(
+        [
+          newPassword ? "Password changed ✓ Use your new password next time you sign in." : "Profile saved successfully.",
+          emailChanged ? `Check ${email} to confirm your new email address.` : "",
+        ].filter(Boolean).join(" ")
+      );
     setFormData((current) => ({ ...current, password: "" }));
+    setConfirmPassword("");
     setSaving(false);
   };
 
@@ -451,16 +482,41 @@ export default function ProfilePage() {
               <span className="text-[#9CA3AF] font-normal">
                 (leave blank to keep current)
               </span>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                placeholder="Enter a new password"
-                className="mt-1.5 w-full px-4 py-3 rounded-xl border border-[#E5E7EB] font-normal"
-              />
+              <span className="relative block">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  placeholder="Min. 6 characters"
+                  autoComplete="new-password"
+                  className="mt-1.5 w-full px-4 py-3 pr-12 rounded-xl border border-[#E5E7EB] font-normal"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-3 top-[calc(50%+3px)] -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280]"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </span>
             </label>
+
+            {formData.password && (
+              <label className="block text-sm font-medium">
+                Confirm new password
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Type it again"
+                  autoComplete="new-password"
+                  className="mt-1.5 w-full px-4 py-3 rounded-xl border border-[#E5E7EB] font-normal"
+                />
+              </label>
+            )}
 
             <div className="grid sm:grid-cols-2 gap-5">
               <label className="text-sm font-medium">

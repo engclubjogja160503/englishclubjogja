@@ -24,7 +24,14 @@ export default function ForgotPasswordPage() {
     );
 
     if (resetError) {
-      setError(resetError.message);
+      const msg = resetError.message;
+      setError(
+        /after \d+ seconds|security purposes/i.test(msg)
+          ? "We just sent you a link. Please wait a minute before asking for another one."
+          : /rate limit/i.test(msg)
+          ? "Too many reset emails were sent in a short time. Please try again in an hour, or ask an admin in the WhatsApp group."
+          : msg
+      );
       setLoading(false);
       return;
     }
