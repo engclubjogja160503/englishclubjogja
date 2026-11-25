@@ -5,6 +5,8 @@ type Supabase = ReturnType<typeof createClient>;
 
 /** Bookings come with a QRIS tip; this is the smallest amount we accept. */
 export const MIN_TIP = 1;
+/** The amount we suggest when people aren't sure what to give. */
+export const RECOMMENDED_TIP = 5000;
 
 export const formatRupiah = (n: number) => "Rp" + Math.round(n).toLocaleString("id-ID");
 

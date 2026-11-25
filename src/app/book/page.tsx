@@ -98,7 +98,7 @@ export default function BookPage() {
     } catch (err) {
       console.error("Payment proof upload error:", err);
       setBookingError(
-        "We couldn't upload your screenshot. Check your connection and try again. · Screenshot gagal di-upload, cek koneksi lalu coba lagi."
+        "We couldn't upload your screenshot. Check your connection and try again."
       );
       return null;
     }
