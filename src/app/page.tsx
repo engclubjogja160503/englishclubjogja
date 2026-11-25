@@ -45,8 +45,8 @@ const FAQ = [
     a: "Yes. That's exactly why we exist. There are no grades and no tests, and mistakes are part of the deal.",
   },
   {
-    q: "Is it really free?",
-    a: "100% free, every week. No tickets, no membership fee. If you want to help keep it running, there's a voluntary QRIS donation, but it's never expected.",
+    q: "Do I need to pay?",
+    a: "Just a tip, in whatever amount feels right to you. You send it via QRIS when you save your seat, and it keeps the venue, materials and sound gear going. No membership fee, no tickets to print.",
   },
   {
     q: "Do I need to create an account?",
@@ -326,12 +326,12 @@ export default function HomePage() {
               </Link>
             </Reveal>
             <Reveal delay={120} className="p-8 lg:p-10 bg-[#FFF3EB] border-2 border-[#1A1A1A] rounded-md flex flex-col gap-4">
-              <p className="eyebrow text-[#B4570F]">Free, kept alive by kindness</p>
+              <p className="eyebrow text-[#B4570F]">Community-powered, kept alive by kindness</p>
               <h2 className="font-display font-extrabold text-[clamp(1.9rem,3.4vw,2.8rem)] leading-[0.95] text-[#1A1A1A]">
-                Help keep it free.
+                Help keep Saturdays going.
               </h2>
               <p className="text-[#374151] text-lg leading-relaxed">
-                Small voluntary donations cover venues, materials and sound gear, so Saturdays stay free for everyone.
+                Tips and small donations cover venues, materials and sound gear, so Saturdays stay open to everyone who wants to talk.
               </p>
               <Link href="/donate" className="group mt-auto inline-flex items-center gap-2 font-semibold text-[#1A1A1A] w-fit border-b-2 border-[#F47B20] pb-1">
                 Donate via QRIS <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />

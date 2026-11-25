@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     template: "%s · English Club Jogja",
   },
   description:
-    "A free English conversation community in Yogyakarta. Every Saturday night we pick a topic, sit in small groups, and talk. Come as you are.",
+    "A community-powered English conversation club in Yogyakarta. Every Saturday night we pick a topic, sit in small groups, and talk. Come as you are.",
   keywords: [
     "English Club",
     "Jogja",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     "English Practice",
     "Saturday Night",
     "Community",
-    "Free Event",
+    "English Conversation",
   ],
   icons: {
     icon: "/favicon.png",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "English Club Jogja",
-    description: "No grades. No pressure. Just conversations. Every Saturday night in Yogyakarta, free.",
+    description: "No grades. No pressure. Just conversations. Every Saturday night in Yogyakarta, open to everyone.",
     images: [
       {
         url: "/images/og-image.jpg",

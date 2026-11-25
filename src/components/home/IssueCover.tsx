@@ -122,8 +122,8 @@ export default function IssueCover({
           </dd>
           <dt className="eyebrow text-[#6B7280] pt-0.5">Where</dt>
           <dd className="text-[#1A1A1A] font-medium">{venueLine(evt)}</dd>
-          <dt className="eyebrow text-[#6B7280] pt-0.5">Cost</dt>
-          <dd className="text-[#1A1A1A] font-medium">Free. No tickets.</dd>
+          <dt className="eyebrow text-[#6B7280] pt-0.5">Entry</dt>
+          <dd className="text-[#1A1A1A] font-medium">Tip what feels right.</dd>
         </dl>
 
         <SeatMap total={evt.max_participants} taken={count} play={inView} />
@@ -161,7 +161,7 @@ export default function IssueCover({
   );
 }
 
-const BIRD_LINES = ["This seat's free!", "Sit with us?", "Free. Like, actually free.", "I saved it for you."];
+const BIRD_LINES = ["This seat's open!", "Sit with us?", "Bring a friend, bring a story.", "I saved it for you."];
 const FULL_LINES = ["Full house tonight!", "See you next Saturday?"];
 
 /** One square per chair. Taken seats stamp in when the map scrolls into view; a bird guards the next free one. */

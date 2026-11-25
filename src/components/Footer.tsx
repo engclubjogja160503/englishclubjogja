@@ -38,7 +38,7 @@ const CREW: CrewMember[] = [
   { kind: "yeti", letter: 12, seat: "front", offset: -0.6, name: "Bima", says: "First time here? Same! Let's talk." },
   { kind: "bird", letter: 3, seat: "top", name: "Wren", says: "Small talk, big talk, all talk!" },
   { kind: "ghost", letter: 5, seat: "behind", name: "Boo", says: "Boo! …sorry, I'm shy. Hi!" },
-  { kind: "kid", letter: 10, seat: "top", name: "Sekar", says: "Best seat in the house. And it's free!" },
+  { kind: "kid", letter: 10, seat: "top", name: "Sekar", says: "Best seat in the house. Saved just for you!" },
   { kind: "mushroom", letter: 16, seat: "front", offset: 1.1, scale: 0.95, name: "Jamur", says: "I'm a fun guy. Fluent-ish, too." },
   { kind: "cat", letter: 16, seat: "front", offset: 2.2, flip: true, name: "Kopi", says: "Mistakes? We collect them here." },
 ];
@@ -58,7 +58,7 @@ export default function Footer() {
           className="h-11 w-auto rounded-sm"
         />
       }
-      blurb="A free English conversation community in Yogyakarta. Every Saturday night we pick a topic, sit in small groups, and talk."
+      blurb="A community-powered English conversation club in Yogyakarta. Every Saturday night we pick a topic, sit in small groups, and talk."
       tagline="No grades. No pressure. Just conversations."
       columns={COLUMNS}
       actions={[

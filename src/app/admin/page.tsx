@@ -25,8 +25,10 @@ import {
   Tag,
   Archive,
   ArchiveRestore,
+  Image as ImageIcon,
 } from "lucide-react";
 import { AGE_RANGES, MBTI_OPTIONS } from "@/lib/constants";
+import { formatRupiah } from "@/lib/tip-proof";
 
 interface EventData {
   id: string;
@@ -58,6 +60,9 @@ interface BookingData {
   cancellation_reason: string | null;
   created_at: string;
   user_id?: string;
+  tip_amount?: number | null;
+  tip_detected?: number | null;
+  payment_proof?: string | null;
   profiles: {
     full_name: string;
     email: string;
@@ -131,6 +136,7 @@ export default function AdminPage() {
     instagram: "",
     age_range: "",
     mbti: "",
+    tip_amount: "",
   });
   const [savingBooking, setSavingBooking] = useState(false);
   const [deleteBookingConfirm, setDeleteBookingConfirm] = useState<string | null>(null);
@@ -382,6 +388,7 @@ export default function AdminPage() {
       instagram: booking.profiles?.instagram || booking.guest_instagram || "",
       age_range: booking.profiles?.age_range || booking.guest_age_range || "",
       mbti: booking.profiles?.mbti || booking.guest_mbti || "",
+      tip_amount: booking.tip_amount != null ? String(booking.tip_amount) : "",
     });
   }
 
@@ -424,6 +431,12 @@ export default function AdminPage() {
         .eq("id", booking.id);
     }
 
+    // Admins can correct the tip when the screenshot was read wrong
+    const tip = editBookingForm.tip_amount ? parseInt(editBookingForm.tip_amount, 10) : null;
+    if (tip !== (booking.tip_amount ?? null)) {
+      await supabase.from("bookings").update({ tip_amount: tip }).eq("id", booking.id);
+    }
+
     setEditingBooking(null);
     setSavingBooking(false);
     if (selectedEvent) fetchBookings(selectedEvent);
@@ -440,7 +453,7 @@ export default function AdminPage() {
   function exportToCSV() {
     const event = events.find((e) => e.id === selectedEvent);
     if (!event) return;
-    const headers = ["Name", "Email", "Phone", "Username", "Occupation", "Domicile", "Instagram", "Age", "MBTI", "Interests", "Type", "Status", "Reason", "Date"];
+    const headers = ["Name", "Email", "Phone", "Username", "Occupation", "Domicile", "Instagram", "Age", "MBTI", "Interests", "Type", "Status", "Reason", "Date", "Tip (Rp)", "Tip read from screenshot (Rp)"];
     const rows = bookings.map((b) => [
       b.profiles?.full_name || b.guest_name || "",
       b.profiles?.email || b.guest_email || "",
@@ -456,6 +469,8 @@ export default function AdminPage() {
       b.status,
       b.cancellation_reason || "",
       new Date(b.created_at).toLocaleDateString(),
+      b.tip_amount ?? "",
+      b.tip_detected ?? "",
     ]);
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -540,6 +555,9 @@ export default function AdminPage() {
   const filteredBookings = bookings.filter((b) => statusFilter === "all" || b.status === statusFilter);
   const confirmedCount = bookings.filter((b) => b.status === "confirmed").length;
   const cancelledCount = bookings.filter((b) => b.status === "cancelled").length;
+  const confirmedTips = bookings.filter((b) => b.status === "confirmed");
+  const tipTotal = confirmedTips.reduce((sum, b) => sum + (b.tip_amount || 0), 0);
+  const tipsWithoutProof = confirmedTips.filter((b) => !b.payment_proof).length;
 
   // Grouping logic
   const groupedBookings: Record<string, BookingData[]> = {};
@@ -1087,6 +1105,12 @@ export default function AdminPage() {
                     <p className="text-sm text-[#6B7280]">
                       {confirmedCount} confirmed / {cancelledCount} cancelled / {bookings.length} total
                     </p>
+                    <p className="text-sm font-semibold text-[#B4570F] mt-0.5">
+                      Tips: {formatRupiah(tipTotal)} from {confirmedCount} confirmed
+                      {tipsWithoutProof > 0 && (
+                        <span className="font-normal text-[#EF4444]"> · {tipsWithoutProof} without proof</span>
+                      )}
+                    </p>
                   </div>
                   <div className="flex items-center gap-3">
                     {/* Status filter */}
@@ -1143,6 +1167,7 @@ export default function AdminPage() {
                         <th className="text-left px-4 py-3 font-medium text-[#374151]">Age</th>
                         <th className="text-left px-4 py-3 font-medium text-[#374151]">MBTI</th>
                         <th className="text-left px-4 py-3 font-medium text-[#374151]">Type</th>
+                        <th className="text-left px-4 py-3 font-medium text-[#374151]">Tip</th>
                         <th className="text-left px-4 py-3 font-medium text-[#374151]">Status</th>
                         <th className="text-left px-4 py-3 font-medium text-[#374151]">Booked At</th>
                         <th className="text-left px-4 py-3 font-medium text-[#374151]">Actions</th>
@@ -1181,6 +1206,9 @@ export default function AdminPage() {
                             >
                               {b.is_member ? "Member" : "Guest"}
                             </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <TipCell booking={b} />
                           </td>
                           <td className="px-4 py-3">
                             {b.status === "confirmed" ? (
@@ -1250,6 +1278,7 @@ export default function AdminPage() {
                                 <th className="text-left px-4 py-3 font-medium text-[#374151]">Age</th>
                                 <th className="text-left px-4 py-3 font-medium text-[#374151]">MBTI</th>
                                 <th className="text-left px-4 py-3 font-medium text-[#374151]">Type</th>
+                        <th className="text-left px-4 py-3 font-medium text-[#374151]">Tip</th>
                                 <th className="text-left px-4 py-3 font-medium text-[#374151]">Status</th>
                                 <th className="text-left px-4 py-3 font-medium text-[#374151]">Booked At</th>
                                 <th className="text-left px-4 py-3 font-medium text-[#374151]">Actions</th>
@@ -1288,6 +1317,9 @@ export default function AdminPage() {
                                     >
                                       {b.is_member ? "Member" : "Guest"}
                                     </span>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <TipCell booking={b} />
                                   </td>
                                   <td className="px-4 py-3">
                                     {b.status === "confirmed" ? (
@@ -1358,6 +1390,18 @@ export default function AdminPage() {
                   onChange={(e) => setEditBookingForm({ ...editBookingForm, full_name: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl border border-[#E5E7EB] text-sm"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#374151] mb-1">Tip (Rp)</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={editBookingForm.tip_amount}
+                  onChange={(e) => setEditBookingForm({ ...editBookingForm, tip_amount: e.target.value.replace(/\D/g, "") })}
+                  placeholder="e.g. 10000"
+                  className="w-full px-4 py-2.5 rounded-xl border border-[#E5E7EB] text-sm"
+                />
+                <p className="mt-1 text-xs text-[#6B7280]">Fix it here if the screenshot was read wrong.</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -1492,6 +1536,51 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+/** Tip column: the amount, a flag when it differs from what the screenshot said, and the screenshot itself. */
+function TipCell({ booking }: { booking: BookingData }) {
+  const [opening, setOpening] = useState(false);
+  const { tip_amount: amount, tip_detected: detected, payment_proof: proof } = booking;
+
+  async function openProof() {
+    if (!proof) return;
+    setOpening(true);
+    // open the tab first so mobile browsers don't block it as a popup
+    const tab = window.open("", "_blank");
+    const { data, error } = await createClient().storage.from("payment-proofs").createSignedUrl(proof, 60 * 10);
+    setOpening(false);
+    if (error || !data) {
+      tab?.close();
+      alert("Couldn't open the screenshot: " + (error?.message || "unknown error"));
+      return;
+    }
+    if (tab) tab.location.href = data.signedUrl;
+    else window.location.href = data.signedUrl;
+  }
+
+  if (amount == null && !proof) return <span className="text-[#9CA3AF] text-xs">—</span>;
+  return (
+    <div className="text-xs whitespace-nowrap">
+      <div className="font-semibold text-[#1A1A1A]">{amount != null ? formatRupiah(amount) : "?"}</div>
+      {detected != null && amount != null && detected !== amount && (
+        <div className="text-[#B45309]" title="The booker changed the amount the site read from their screenshot">
+          screenshot: {formatRupiah(detected)}
+        </div>
+      )}
+      {proof ? (
+        <button
+          type="button"
+          onClick={openProof}
+          className="mt-0.5 inline-flex items-center gap-1 text-[#3B7DD8] hover:underline"
+        >
+          {opening ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />} Proof
+        </button>
+      ) : (
+        <div className="text-[#EF4444]">no proof</div>
       )}
     </div>
   );

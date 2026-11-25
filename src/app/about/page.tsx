@@ -11,7 +11,7 @@ import rooftopSession from "@/assets/photos/rooftop-session.jpg";
 export const metadata = {
   title: "About",
   description:
-    "English Club Jogja is a free, community-run English conversation club in Yogyakarta. No grades, no pressure, just conversations.",
+    "English Club Jogja is a community-powered English conversation club in Yogyakarta. No grades, no pressure, just conversations.",
 };
 
 const PRINCIPLES = [
@@ -53,7 +53,7 @@ export default function AboutPage() {
           </h1>
           <div className="mt-10 grid lg:grid-cols-12 gap-10">
             <p className="lg:col-span-6 text-xl text-[#374151] leading-relaxed">
-              English Club Jogja is a free, community-run club in Yogyakarta. Every Saturday night we pick a topic, sit in small groups, and talk about it in English. That&apos;s it. No teacher at the front, no fee, no certificate at the end.
+              English Club Jogja is a community-powered club in Yogyakarta, open to anyone who wants to talk. Every Saturday night we pick a topic, sit in small groups, and talk about it in English. That&apos;s it. No teacher at the front, no fee, no certificate at the end.
             </p>
             <p className="lg:col-span-5 lg:col-start-8 text-lg text-[#374151] leading-relaxed">
               People come to practise, to get over the fear of speaking, to meet people outside their campus or office, or just to fill a Saturday with something better than scrolling.

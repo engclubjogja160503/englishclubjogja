@@ -8,7 +8,7 @@ import { WHATSAPP_GROUP_URL } from "@/lib/constants";
 export const metadata = {
   title: "Donate",
   description:
-    "Support English Club Jogja! Your donation keeps our free Saturday night English sessions running.",
+    "Support English Club Jogja! Your donation keeps our community-powered Saturday night English sessions running.",
 };
 
 const USES = [
@@ -28,13 +28,13 @@ export default function DonatePage() {
             <h1 className="word-rise font-display font-extrabold text-[clamp(2.8rem,7vw,6rem)] leading-[0.9] text-[#1A1A1A]">
               <span>Help</span> <span style={{ animationDelay: "80ms" }}>keep</span>{" "}
               <span style={{ animationDelay: "160ms" }}>Saturdays</span>{" "}
-              <span className="text-[#F47B20]" style={{ animationDelay: "240ms" }}>free.</span>
+              <span className="text-[#F47B20]" style={{ animationDelay: "240ms" }}>going.</span>
             </h1>
             <p className="text-xl text-[#374151] leading-relaxed max-w-2xl">
-              Every Saturday night, we gather to practise English, meet new people, and build confidence. It&apos;s <strong className="text-[#1A1A1A]">100% free for everyone, always.</strong>
+              Every Saturday night, we gather to practise English, meet new people, and build confidence. It&apos;s <strong className="text-[#1A1A1A]">open to everyone who wants to talk, always.</strong>
             </p>
             <p className="text-lg text-[#6B7280] leading-relaxed max-w-2xl">
-              To keep it that way, we rely on small voluntary contributions from people like you. Your donation goes directly toward the community&apos;s running costs and the little things that make each meetup warm and welcoming.
+              To keep it that way, every booking comes with a tip, and anyone can chip in a little extra here. Your donation goes directly toward the community&apos;s running costs and the little things that make each meetup warm and welcoming.
             </p>
 
             <ul className="mt-4 border-t-2 border-[#1A1A1A]">

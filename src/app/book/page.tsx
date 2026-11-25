@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GoingPill from "@/components/GoingPill";
@@ -22,6 +21,8 @@ import { isUpcoming, type EventData as FullEvent } from "@/lib/events";
 import { BookedMoment } from "@/components/event/TicketMoments";
 import { forgetMyBooking } from "@/lib/use-my-booking";
 import { countConfirmed, fetchAttendees } from "@/lib/attendees";
+import TipPayment, { emptyTip, tipAmountOf, tipProblem, type TipState } from "@/components/book/TipPayment";
+import { uploadProof } from "@/lib/tip-proof";
 
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_WEBHOOK_URL;
 
@@ -66,6 +67,48 @@ export default function BookPage() {
   const [attendees, setAttendees] = useState<AttendeeData[]>([]);
   const [bookingError, setBookingError] = useState("");
   const [bookingCount, setBookingCount] = useState(0);
+  // every booking, member or guest, comes with a QRIS tip and its screenshot
+  const [tip, setTip] = useState<TipState>(emptyTip);
+  const tipMessage = useRef("");
+
+  /** Any change to the tip clears the "please add your tip" message it answers. */
+  const updateTip: typeof setTip = (next) => {
+    setTip(next);
+    if (tipMessage.current) {
+      const shown = tipMessage.current;
+      setBookingError((e) => (e === shown ? "" : e));
+      tipMessage.current = "";
+    }
+  };
+
+  /** Stops the booking with a message next to the tip box when the tip isn't complete. */
+  const tipBlocks = () => {
+    const problem = tipProblem(tip);
+    if (!problem) return false;
+    tipMessage.current = problem;
+    setBookingError(problem);
+    document.getElementById("tip")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return true;
+  };
+
+  /** Uploads the screenshot; returns its storage path, or null after showing an error. */
+  const storeProof = async (supabase: ReturnType<typeof createClient>, eventId: string) => {
+    try {
+      return await uploadProof(supabase, eventId, tip.image!);
+    } catch (err) {
+      console.error("Payment proof upload error:", err);
+      setBookingError(
+        "We couldn't upload your screenshot. Check your connection and try again. · Screenshot gagal di-upload, cek koneksi lalu coba lagi."
+      );
+      return null;
+    }
+  };
+
+  const tipFields = (proof: string) => ({
+    tip_amount: tipAmountOf(tip),
+    tip_detected: tip.detected,
+    payment_proof: proof,
+  });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -224,6 +267,29 @@ export default function BookPage() {
       return;
     }
 
+    // One seat per member: if they already have one, just show it again (no second tip needed).
+    const { data: existingBooking } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("event_id", event.id)
+      .eq("user_id", member.id)
+      .eq("status", "confirmed")
+      .limit(1)
+      .maybeSingle();
+
+    if (existingBooking) {
+      setBookingId(existingBooking.id);
+      forgetMyBooking();
+      setStep("success");
+      setSubmitting(false);
+      return;
+    }
+
+    if (tipBlocks()) {
+      setSubmitting(false);
+      return;
+    }
+
     const memberEmail = member.email || loginEmail;
     const memberUsername =
       currentUser?.user_metadata?.username ||
@@ -253,20 +319,8 @@ export default function BookPage() {
       return;
     }
 
-    // One seat per member: if they already have one, just show it again.
-    const { data: existingBooking } = await supabase
-      .from("bookings")
-      .select("id")
-      .eq("event_id", event.id)
-      .eq("user_id", member.id)
-      .eq("status", "confirmed")
-      .limit(1)
-      .maybeSingle();
-
-    if (existingBooking) {
-      setBookingId(existingBooking.id);
-      forgetMyBooking();
-    setStep("success");
+    const proof = await storeProof(supabase, event.id);
+    if (!proof) {
       setSubmitting(false);
       return;
     }
@@ -284,13 +338,14 @@ export default function BookPage() {
     const bookingQuery = cancelledBooking
       ? supabase
           .from("bookings")
-          .update({ status: "confirmed", cancellation_reason: null })
+          .update({ status: "confirmed", cancellation_reason: null, ...tipFields(proof) })
           .eq("id", cancelledBooking.id)
       : supabase.from("bookings").insert({
           event_id: event.id,
           user_id: member.id,
           status: "confirmed",
           is_member: true,
+          ...tipFields(proof),
         });
 
     const { data: booking, error: bookingError } = await bookingQuery
@@ -320,6 +375,7 @@ export default function BookPage() {
         bookingDate: new Date().toISOString(),
         age: formData.age_range,
         mbti: formData.mbti,
+        tip: tipAmountOf(tip),
       });
     }
 
@@ -383,6 +439,7 @@ export default function BookPage() {
         return;
       }
     }
+    if (tipBlocks()) return;
 
     setSubmitting(true);
 
@@ -415,13 +472,19 @@ export default function BookPage() {
       });
     }
 
+    const proof = await storeProof(supabase, event.id);
+    if (!proof) {
+      setSubmitting(false);
+      return;
+    }
+
     let booking: { id: string } | null = null;
     let bookingError: { message: string } | null = null;
 
     if (isMember && user) {
       const res = await supabase
         .from("bookings")
-        .insert({ event_id: event.id, user_id: user.id, status: "confirmed", is_member: true })
+        .insert({ event_id: event.id, user_id: user.id, status: "confirmed", is_member: true, ...tipFields(proof) })
         .select("id")
         .single();
       booking = res.data;
@@ -439,6 +502,9 @@ export default function BookPage() {
         p_occupation: formData.occupation,
         p_domicile: formData.domicile,
         p_instagram: formData.instagram,
+        p_tip_amount: tipAmountOf(tip),
+        p_tip_detected: tip.detected,
+        p_payment_proof: proof,
       });
       if (res.error) {
         const code = res.error.message;
@@ -481,6 +547,7 @@ export default function BookPage() {
         bookingDate: new Date().toISOString(),
         age: formData.age_range,
         mbti: formData.mbti,
+        tip: tipAmountOf(tip),
       });
     }
 
@@ -590,7 +657,7 @@ export default function BookPage() {
       <div className="min-h-screen flex flex-col bg-[#F5F0E8]">
         <Navbar />
         <div className="flex-1 flex items-center justify-center px-4 py-12">
-          <div className="max-w-lg w-full dialog-rise">
+          <div className="max-w-2xl w-full dialog-rise">
             <div className="text-center mb-8">
               <h1 className="font-display font-extrabold text-4xl sm:text-5xl leading-[0.95] tracking-tight text-[#1A1A1A] mb-3">
                 Are you coming?
@@ -600,7 +667,9 @@ export default function BookPage() {
               </p>
             </div>
 
-            <div className="bg-white rounded-xl p-6 sm:p-8 border-2 border-[#1A1A1A] shadow-[5px_5px_0_#1A1A1A]">
+            <TipPayment tip={tip} setTip={updateTip} />
+
+            <div className="mt-6 bg-white rounded-xl p-6 sm:p-8 border-2 border-[#1A1A1A] shadow-[5px_5px_0_#1A1A1A]">
               {bookingError && (
                 <div className="mb-5 p-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-sm text-center">
                   {bookingError}
@@ -611,10 +680,10 @@ export default function BookPage() {
                 <button
                   type="button"
                   onClick={confirmMemberBooking}
-                  disabled={submitting}
+                  disabled={submitting || tip.reading}
                   className="px-5 py-4 font-semibold bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] disabled:opacity-60 text-[#1A1A1A] border-2 border-[#1A1A1A] shadow-[0_3px_0_#1A1A1A] rounded-lg transition-colors"
                 >
-                  {submitting ? "Confirming..." : "Yes, I'm in!"}
+                  {submitting ? "Confirming..." : tip.reading ? "Reading tip…" : "Yes, I'm in!"}
                 </button>
                 <button
                   type="button"
@@ -624,22 +693,6 @@ export default function BookPage() {
                 >
                   No, see you next time
                 </button>
-              </div>
-
-              <div className="border-t border-[#EDE5D8] mt-8 pt-8 text-center">
-                <h3 className="font-display text-xl font-bold text-[#1A1A1A] mb-1">
-                  Want to support us?
-                </h3>
-                <p className="text-sm text-[#6B7280] mb-5">
-                  This event is free. Contributions are optional.
-                </p>
-                <Image
-                  src="/images/qris.jpeg"
-                  alt="QRIS English Club Jogja"
-                  width={220}
-                  height={220}
-                  className="mx-auto rounded-2xl border border-[#E5E7EB]"
-                />
               </div>
             </div>
           </div>
@@ -1151,41 +1204,21 @@ export default function BookPage() {
               </div>
             </div>
 
-            {/* QRIS Section */}
-            <div className="mt-8 bg-[#FFF3EB] rounded-xl p-6 sm:p-8 border-2 border-[#1A1A1A]">
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-sm font-medium mb-4">
-                  <span>This event is 100% FREE</span>
-                </div>
-                <h3 className="font-display text-xl font-bold text-[#1A1A1A] mb-1">
-                  Want to support us?
-                </h3>
-                <p className="text-sm text-[#6B7280]">
-                  Scan the QRIS below if you&apos;d like to chip in for
-                  community operations. Totally optional!
-                </p>
-              </div>
-
-              <div className="flex justify-center">
-                <Image
-                  src="/images/qris.jpeg"
-                  alt="QRIS English Club Jogja"
-                  width={220}
-                  height={220}
-                  className="rounded-lg border-2 border-[#1A1A1A]"
-                />
-              </div>
-
-              <p className="text-center text-xs text-[#9CA3AF] mt-4">
-                Every contribution helps us keep this community alive and running.
-              </p>
+            {/* Tip via QRIS + payment screenshot (required) */}
+            <div className="mt-8">
+              <TipPayment tip={tip} setTip={updateTip} />
             </div>
 
             {/* Submit Button */}
             <div className="mt-8">
+              {bookingError && (
+                <div className="mb-4 p-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-sm text-center">
+                  {bookingError}
+                </div>
+              )}
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || tip.reading}
                 className="w-full flex items-center justify-center gap-2 px-6 py-4 font-semibold text-lg bg-[#F47B20] hover:bg-[#1A1A1A] hover:text-[#F5F0E8] disabled:opacity-60 text-[#1A1A1A] border-2 border-[#1A1A1A] shadow-[0_3px_0_#1A1A1A] rounded-lg transition-colors"
               >
                 {submitting ? (

@@ -180,7 +180,7 @@ export function CancelledMoment({ onAnother }: { onAnother?: () => void }) {
       <h1 className="mo-title word-rise">
         <span>Booking</span> <span className="text-[#3B7DD8]" style={{ animationDelay: "90ms" }}>cancelled.</span>
       </h1>
-      <p className="mo-lede">Thanks for letting us know. Your seat is free for someone else now.</p>
+      <p className="mo-lede">Thanks for letting us know. Your seat is open for someone else now.</p>
 
       <div className="mo-torn" aria-hidden="true">
         <svg viewBox="-40 -20 680 270" className="mo-torn-svg">

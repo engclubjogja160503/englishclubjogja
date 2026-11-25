@@ -238,8 +238,8 @@ function EventDialog({
                 </a>
               )}
             </dd>
-            <dt className="eyebrow text-[#6B7280] pt-0.5">Cost</dt>
-            <dd className="text-[#1A1A1A] font-medium">Free. No tickets needed.</dd>
+            <dt className="eyebrow text-[#6B7280] pt-0.5">Entry</dt>
+            <dd className="text-[#1A1A1A] font-medium">A tip via QRIS, whatever feels right.</dd>
             <dt className="eyebrow text-[#6B7280] pt-0.5">Seats</dt>
             <dd className="text-[#1A1A1A] font-medium">
               {isFull ? "Fully booked" : `${left} of ${event.max_participants} left`}
